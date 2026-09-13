@@ -1,0 +1,134 @@
+[
+  {
+    "question_id": "q001",
+    "question": "What is Nikhil Dhasmana's educational qualification and which institution did he attend?",
+    "expected_answer": "Inderprastha Engineering College (IPEC), Ghaziabad — B.Tech in Artificial Intelligence & Machine Learning (AIML), AKTU with expected graduation in 2027.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 494,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.1007,
+    "retrieval_status": "Relevant evidence located in Chunk #6"
+  },
+  {
+    "question_id": "q002",
+    "question": "Which certifications did Nikhil Dhasmana complete and in which months/years?",
+    "expected_answer": "CRUD Operations in MongoDB from MongoDB (October 2025) and Database Programming with SQL - English from Oracle Academy (November 2025).",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 494,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0351,
+    "retrieval_status": "Relevant evidence located in Chunk #6"
+  },
+  {
+    "question_id": "q003",
+    "question": "What is the tech stack and architecture of the 'AI Delivery Freshkart' project?",
+    "expected_answer": "A full-stack grocery & e-commerce delivery platform built with Next.js, TypeScript, React, Node.js, Express.js, MongoDB, Socket.IO, JWT, and Tailwind CSS.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 470,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0477,
+    "retrieval_status": "Relevant evidence located in Chunk #3 and #4"
+  },
+  {
+    "question_id": "q004",
+    "question": "How was authentication and access control implemented in AI Delivery Freshkart?",
+    "expected_answer": "Implemented secure JWT-based authentication and Role-Based Access Control (RBAC) to manage user sessions and permissions across different roles, including customers and delivery partners.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 435,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0688,
+    "retrieval_status": "Relevant evidence located in Chunk #4"
+  },
+  {
+    "question_id": "q005",
+    "question": "How does the platform handle real-time order tracking and live delivery updates?",
+    "expected_answer": "Built using Socket.IO and WebSockets, allowing live delivery-status updates and delivery-partner information to be surfaced to customers for better order transparency.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 435,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0466,
+    "retrieval_status": "Relevant evidence located in Chunk #4"
+  },
+  {
+    "question_id": "q006",
+    "question": "What is the expected graduation year and contact phone number stated on the document?",
+    "expected_answer": "Expected graduation year is 2027 and the contact phone number is +91 9654861040.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 286,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0315,
+    "retrieval_status": "Relevant evidence located in Chunks #1 and #6"
+  },
+  {
+    "question_id": "q007",
+    "question": "What core backend operations and database schemas were designed for AI Delivery Freshkart?",
+    "expected_answer": "RESTful APIs developed using Node.js and Express.js for core operations including product management, cart handling, order processing, and delivery assignment, with structured and query-optimized MongoDB schemas.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 470,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0347,
+    "retrieval_status": "Relevant evidence located in Chunk #5"
+  },
+  {
+    "question_id": "q008",
+    "question": "What frontend technologies and styling frameworks were used to build the user interface?",
+    "expected_answer": "Next.js, React.js, TypeScript, and Tailwind CSS, integrated with backend APIs and real-time services to provide a responsive and scalable end-to-end shopping workflow.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 476,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0343,
+    "retrieval_status": "Relevant evidence located in Chunks #2 and #5"
+  },
+  {
+    "question_id": "q009",
+    "question": "What is the difference between the databases listed under Technical Skills versus the database used in the project experience?",
+    "expected_answer": "Under Technical Skills, both MongoDB and MySQL are listed, whereas in the AI Delivery Freshkart project experience, MongoDB is specifically utilized with query-optimized schemas.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 286,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0384,
+    "retrieval_status": "Relevant evidence located in Chunks #2 and #3"
+  },
+  {
+    "question_id": "q010",
+    "question": "Synthesize the developer's full-stack skill profile connecting Technical Skills with Project Experience.",
+    "expected_answer": "The developer lists MERN stack, Next.js, TypeScript, and Socket.IO in Technical Skills, and demonstrates their full lifecycle application in AI Delivery Freshkart for RESTful APIs, JWT/RBAC, real-time WebSocket order tracking, and responsive Tailwind UI.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 286,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0364,
+    "retrieval_status": "Relevant evidence spanned across Chunks #1, #2, #3, #4"
+  },
+  {
+    "question_id": "q011",
+    "question": "What testing framework or cloud deployment platforms such as AWS or Docker are documented?",
+    "expected_answer": "No automated testing frameworks (e.g. Jest, Pytest) or cloud/container platforms (Docker, AWS) are documented in the project; only API testing using Postman is mentioned under Skills.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 476,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0306,
+    "retrieval_status": "Relevant evidence located in Chunk #2"
+  },
+  {
+    "question_id": "q012",
+    "question": "What were the user benchmark latency figures, daily active users (DAU), and payment gateway integration used in the Freshkart deployment?",
+    "expected_answer": "The document does not contain information about user latency figures, daily active users (DAU), or payment gateway integration.",
+    "retrieved_chunks_count": 3,
+    "top_chunk_source": "Nikhil_Dhasmana_Resume_2.pdf",
+    "top_chunk_characters": 435,
+    "evidence_relevant": true,
+    "response_time_seconds": 0.0352,
+    "retrieval_status": "Retrieved chunks correctly confirm absence of conflicting factual claims"
+  }
+]
