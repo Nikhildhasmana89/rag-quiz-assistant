@@ -60,12 +60,13 @@ class ChromaVectorStore:
         Args:
             force_recreate: If True, delete existing collection and recreate
         """
-        if force_recreate and self.collection:
+        if force_recreate:
             try:
                 self.client.delete_collection(name=self.collection_name)
+                self.collection = None
                 logger.info(f"Deleted existing collection: {self.collection_name}")
             except Exception as e:
-                logger.warning(f"Could not delete collection: {e}")
+                logger.debug(f"Collection did not exist or could not be deleted: {e}")
 
         try:
             self.collection = self.client.create_collection(
@@ -103,14 +104,29 @@ class ChromaVectorStore:
         if ids is None:
             ids = [str(i) for i in range(len(texts))]
 
-        if metadata is None:
-            metadata = [{} for _ in texts]
+        metadatas_to_add = None
+        if metadata is not None:
+            sanitized = []
+            for m in metadata:
+                if not m:
+                    sanitized.append({"indexed": True})
+                    continue
+                clean_m = {}
+                for k, v in m.items():
+                    if v is None:
+                        clean_m[k] = ""
+                    elif isinstance(v, (str, int, float, bool)):
+                        clean_m[k] = v
+                    else:
+                        clean_m[k] = str(v)
+                sanitized.append(clean_m if clean_m else {"indexed": True})
+            metadatas_to_add = sanitized
 
         try:
             self.collection.add(
                 ids=ids,
                 documents=texts,
-                metadatas=metadata,
+                metadatas=metadatas_to_add,
             )
             logger.info(f"Added {len(texts)} documents to collection")
         except Exception as e:
@@ -129,7 +145,7 @@ class ChromaVectorStore:
             n_results: Number of results to return
 
         Returns:
-            Query results with documents and distances
+            Query results with documents, metadatas, and distances
         """
         if self.collection is None:
             raise ValueError("Collection not created. Call create_collection() first")
@@ -192,17 +208,13 @@ class ChromaVectorStore:
 
     def delete_collection(self):
         """Delete the current collection."""
-        if self.collection is None:
-            logger.warning("No collection to delete")
-            return
-
         try:
             self.client.delete_collection(name=self.collection_name)
             self.collection = None
             logger.info(f"Deleted collection: {self.collection_name}")
         except Exception as e:
-            logger.error(f"Error deleting collection: {str(e)}")
-            raise
+            self.collection = None
+            logger.debug(f"Could not delete collection: {e}")
 
     def clear_collection(self):
         """Clear all documents from the collection while keeping it."""

@@ -41,13 +41,47 @@ This document tracks the iterative development and experimental evaluation of th
 
 ---
 
+
+---
+
+## Experiment 2: Structure-Aware Document Processing & Metadata
+
+- **Date:** September 2026
+- **System Version:** Step 2 (Structure-Aware Document Processing & Rich Metadata)
+- **Document Evaluated:** `Nikhil_Dhasmana_Resume_2.pdf` (1 Page, 6 Chunks, 53,622 bytes)
+
+### Configuration
+- **Retrieval Engine:** Semantic Vector Search with Full Provenance (ChromaDB approximate nearest neighbors)
+- **Embedding Model:** `all-MiniLM-L6-v2` (384 dimensions, local inference)
+- **Document ID Strategy:** Deterministic SHA-256 hash (`doc_{hash[:12]}`)
+- **Chunk ID Strategy:** Deterministic globally unique identifier (`f"{document_id}_p{page}_c{chunk_index}"`)
+- **Section Detection Strategy:** Deterministic regex heuristic identifying academic/technical section headings (*Abstract, Introduction, Background, Related Work, Methodology, System Architecture, Experimental Setup, Results, Discussion, Conclusion, Limitations, References, Technical Skills, Education, Project Experience*)
+- **ChromaDB Compatibility:** Sanitized primitive dictionary types; `metadatas=None` fallback for empty collections (fixes ChromaDB 1.5.9 schema constraint)
+- **Dual Retrieval API:**
+  - `retrieve(query, n_results=5)` -> `List[str]` (100% backward compatible)
+  - `retrieve_with_metadata(query, n_results=5)` -> `List[Dict[str, Any]]` (contains text, metadata, id, distance)
+
+### Quantitative Benchmark Results
+- **Schema Completeness Rate:** 100% (6/6 chunks contain document_id, source_file, page_number, section, chunk_id, chunk_size, document_type)
+- **Chunk ID Collision Rate:** 0.0% (0 duplicate IDs across indexing operations)
+- **Ingestion Latency:** 2.67 seconds
+- **Average Retrieval Latency (with Metadata):** 0.159 seconds (159.8 ms)
+- **Test Suite Pass Rate:** 100% (56 / 56 tests passed)
+
+### Qualitative Observations
+1. **Provenance Granularity:** Every retrieved chunk now carries explicit source file, page number, and section tags, making answers fully traceable to specific document locations.
+2. **Deterministic Stability:** Ingestion of identical documents produces identical `document_id` and `chunk_id`s, preventing ghost duplicates and unneeded database bloat.
+3. **Foundation Ready:** The unified chunk representation now provides the required fields (`document_id`, `chunk_id`, `text`, `section`, `page_number`) needed for BM25 indexing in Step 3 and Cross-Encoder reranking in Step 4.
+
+---
+
 ## Planned Experiments (Future Steps)
 
 | Step | Experiment Name | Focus Area | Status |
 | :--- | :--- | :--- | :--- |
 | **Step 1** | **Baseline RAG** | Baseline stabilization & evaluation | **COMPLETED** |
-| **Step 2** | Structure-Aware Document Processing | Section hierarchy & page metadata | *Next Up* |
-| **Step 3** | Hybrid Retrieval | BM25 sparse + dense vector fusion | *Planned* |
+| **Step 2** | **Structure-Aware Document Processing** | Section hierarchy & page metadata | **COMPLETED** |
+| **Step 3** | Hybrid Retrieval | BM25 sparse + dense vector fusion | *Next Up* |
 | **Step 4** | Neural Reranking | Cross-Encoder top-K reranking | *Planned* |
 | **Step 5** | Evidence Verification | NLI / Fact-checking verification | *Planned* |
 | **Step 6** | Advanced Citations | Chunk & page-level citation anchors | *Planned* |

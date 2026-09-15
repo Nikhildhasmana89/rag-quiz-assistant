@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+import hashlib
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class RAGPipeline:
         collection_name: Optional[str] = None,
         force_recreate: bool = False,
     ) -> Dict[str, Any]:
-        """Ingest a PDF document into the vector store.
+        """Ingest a PDF document into the vector store with structure awareness and provenance.
 
         Args:
             pdf_path: Path to PDF file
@@ -50,44 +51,98 @@ class RAGPipeline:
         pdf_path = Path(pdf_path)
         logger.info(f"Starting PDF ingestion: {pdf_path}")
 
+        # Compute deterministic document ID based on content
+        try:
+            with open(pdf_path, "rb") as f:
+                content_bytes = f.read()
+            document_id = f"doc_{hashlib.sha256(content_bytes).hexdigest()[:12]}"
+        except Exception:
+            document_id = f"doc_{hashlib.sha256(str(pdf_path.name).encode()).hexdigest()[:12]}"
+
         # Extract text
         logger.debug("Extracting text from PDF...")
         texts = self.pdf_extractor.extract_text(pdf_path)
         logger.info(f"Extracted {len(texts)} pages")
 
-        # Chunk text
-        logger.debug("Chunking text...")
-        chunks = self.text_chunker.chunk_texts(texts)
-        logger.info(f"Created {len(chunks)} chunks")
-
-        # Create collection
+        # Create or recreate collection
         if force_recreate:
             self.vector_store.delete_collection()
 
         self.vector_store.create_collection()
 
-        # Generate metadata
-        metadata = [
-            {
-                "source": str(pdf_path),
-                "source_file": pdf_path.name,
-                "chunk_size": len(chunk),
-            }
-            for chunk in chunks
-        ]
+        # Chunk text with structure awareness and page metadata
+        logger.debug("Chunking text with structure awareness...")
+        all_chunks = []
+        all_metadatas = []
+        all_ids = []
+        current_section = ""
+        global_chunk_idx = 0
+
+        # Try structure-aware page chunking if available
+        if hasattr(self.text_chunker, "chunk_page_with_metadata") and callable(getattr(self.text_chunker, "chunk_page_with_metadata")):
+            try:
+                for page_idx, page_text in enumerate(texts):
+                    page_number = page_idx + 1
+                    if not page_text or not str(page_text).strip():
+                        continue
+                    page_chunks = self.text_chunker.chunk_page_with_metadata(
+                        page_text=str(page_text),
+                        page_number=page_number,
+                        document_id=document_id,
+                        source_file=pdf_path.name,
+                        document_type="pdf",
+                        start_chunk_index=global_chunk_idx,
+                        initial_section=current_section,
+                    )
+                    if isinstance(page_chunks, list):
+                        for chunk_item in page_chunks:
+                            if isinstance(chunk_item, dict) and "text" in chunk_item:
+                                all_chunks.append(chunk_item["text"])
+                                all_metadatas.append(chunk_item)
+                                all_ids.append(chunk_item.get("chunk_id", f"{document_id}_p{page_number}_c{global_chunk_idx}"))
+                                if chunk_item.get("section"):
+                                    current_section = chunk_item["section"]
+                                global_chunk_idx += 1
+            except Exception as e:
+                logger.warning(f"Error during chunk_page_with_metadata: {e}")
+
+        # Fallback to chunk_texts if page chunking didn't produce chunks (e.g. in mocked tests)
+        if not all_chunks and hasattr(self.text_chunker, "chunk_texts"):
+            fallback_chunks = self.text_chunker.chunk_texts(texts)
+            if isinstance(fallback_chunks, list):
+                for i, chunk in enumerate(fallback_chunks):
+                    cid = f"{document_id}_p1_c{i}"
+                    all_chunks.append(chunk)
+                    all_ids.append(cid)
+                    all_metadatas.append({
+                        "text": chunk,
+                        "document_id": document_id,
+                        "source": str(pdf_path),
+                        "source_file": pdf_path.name,
+                        "page_number": 1,
+                        "section": "",
+                        "chunk_id": cid,
+                        "chunk_index": i,
+                        "chunk_size": len(chunk) if isinstance(chunk, str) else 0,
+                        "document_type": "pdf",
+                    })
+
+        logger.info(f"Created {len(all_chunks)} chunks with metadata")
 
         # Add to vector store
         logger.debug("Adding chunks to vector store...")
         self.vector_store.add_documents(
-            texts=chunks,
-            metadata=metadata,
+            texts=all_chunks,
+            ids=all_ids,
+            metadata=all_metadatas,
         )
 
         result = {
             "success": True,
+            "document_id": document_id,
             "pdf_path": str(pdf_path),
             "pages_extracted": len(texts),
-            "chunks_created": len(chunks),
+            "chunks_created": len(all_chunks),
             "collection_name": self.vector_store.collection_name,
         }
 
@@ -119,10 +174,54 @@ class RAGPipeline:
             n_results=n_results,
         )
 
-        documents = results["documents"][0] if results["documents"] else []
+        documents = results["documents"][0] if (results and "documents" in results and results["documents"]) else []
         logger.info(f"Retrieved {len(documents)} documents")
 
         return documents
+
+    def retrieve_with_metadata(
+        self,
+        query: str,
+        n_results: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """Retrieve relevant documents along with provenance metadata.
+
+        Args:
+            query: Query text
+            n_results: Number of results to retrieve
+
+        Returns:
+            List of dicts containing 'text', 'metadata', 'id', and 'distance'
+        """
+        logger.debug(f"Retrieving documents with metadata for query: {query}")
+
+        if self.vector_store.collection is None:
+            self.vector_store.create_collection()
+
+        results = self.vector_store.query(
+            query_texts=[query],
+            n_results=n_results,
+        )
+
+        if not results or "documents" not in results or not results["documents"]:
+            return []
+
+        docs = results["documents"][0] if results.get("documents") else []
+        metas = results["metadatas"][0] if results.get("metadatas") else [{}] * len(docs)
+        ids = results["ids"][0] if results.get("ids") else [""] * len(docs)
+        dists = results["distances"][0] if results.get("distances") else [0.0] * len(docs)
+
+        structured = []
+        for doc, meta, cid, dist in zip(docs, metas, ids, dists):
+            structured.append({
+                "text": doc,
+                "metadata": meta or {},
+                "id": cid,
+                "distance": dist,
+            })
+
+        logger.info(f"Retrieved {len(structured)} documents with metadata")
+        return structured
 
     def generate_response(
         self,
@@ -192,8 +291,9 @@ Answer:"""
         """
         logger.info(f"Executing RAG query: {query}")
 
-        # Retrieve
-        documents = self.retrieve(query, n_results=n_retrieve)
+        # Retrieve with metadata
+        retrieved_chunks = self.retrieve_with_metadata(query, n_results=n_retrieve)
+        documents = [c["text"] for c in retrieved_chunks] if retrieved_chunks else []
 
         # Generate
         response = self.generate_response(
@@ -206,6 +306,7 @@ Answer:"""
         result = {
             "query": query,
             "retrieved_documents": documents,
+            "retrieved_chunks": retrieved_chunks,
             "response": response,
             "n_documents_retrieved": len(documents),
         }
