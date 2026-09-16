@@ -60,6 +60,7 @@ def setup_pipeline():
         text_chunker=text_chunker,
         vector_store=vector_store,
         llm_client=llm_client,
+        config=config,
     )
 
     return pipeline, config
@@ -111,17 +112,33 @@ def cmd_query(args):
             n_retrieve=args.top_k,
             temperature=args.temperature,
             max_tokens=args.max_tokens,
+            mode=getattr(args, "mode", None),
+            fusion_method=getattr(args, "fusion", None),
         )
 
         print(f"\n{'='*60}")
         print(f"Query: {result['query']}")
+        print(f"Retrieval Mode: {result.get('retrieval_mode', 'default')}")
+        if "fusion_method" in result:
+            print(f"Fusion Method: {result['fusion_method']}")
         print(f"{'='*60}")
         print(f"\nRetrieved {result['n_documents_retrieved']} documents:\n")
 
-        for i, doc in enumerate(result["retrieved_documents"], 1):
-            print(f"[Document {i}]")
-            print(doc[:200] + "..." if len(doc) > 200 else doc)
-            print()
+        chunks = result.get("retrieved_chunks") or []
+        if chunks:
+            for i, chunk in enumerate(chunks, 1):
+                source_info = chunk.get("retrieval_source", "vector")
+                score_val = chunk.get("hybrid_score", chunk.get("dense_score", 0.0))
+                page_info = chunk.get("metadata", {}).get("page_number", "?")
+                print(f"[Document {i}] (Source: {source_info}, Score: {score_val:.4f}, Page: {page_info})")
+                doc_text = chunk.get("text", "")
+                print(doc_text[:200] + "..." if len(doc_text) > 200 else doc_text)
+                print()
+        else:
+            for i, doc in enumerate(result["retrieved_documents"], 1):
+                print(f"[Document {i}]")
+                print(doc[:200] + "..." if len(doc) > 200 else doc)
+                print()
 
         print(f"{'='*60}")
         print("Response:")
@@ -259,6 +276,20 @@ Examples:
         type=int,
         default=2048,
         help="Max tokens in response (default: 2048)",
+    )
+    query_parser.add_argument(
+        "--mode",
+        "-m",
+        choices=["hybrid", "vector"],
+        default=None,
+        help="Retrieval mode: hybrid or vector (default: from config)",
+    )
+    query_parser.add_argument(
+        "--fusion",
+        "-f",
+        choices=["weighted", "rrf"],
+        default=None,
+        help="Hybrid fusion method: weighted or rrf (default: from config)",
     )
     query_parser.set_defaults(func=cmd_query)
 

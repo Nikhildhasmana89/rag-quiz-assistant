@@ -51,6 +51,22 @@ class PDFConfig:
 
 
 @dataclass
+class HybridConfig:
+    """Hybrid retrieval (Dense + BM25) configuration."""
+
+    enabled: bool = True
+    retrieval_mode: str = "hybrid"  # "hybrid" or "vector"
+    dense_top_k: int = 20
+    bm25_top_k: int = 20
+    final_top_k: int = 5
+    dense_weight: float = 0.5
+    bm25_weight: float = 0.5
+    fusion_method: str = "weighted"  # "weighted" or "rrf"
+    rrf_k: int = 60
+    bm25_persist_dir: str = "./data/bm25"
+
+
+@dataclass
 class AppConfig:
     """Main application configuration."""
 
@@ -58,6 +74,7 @@ class AppConfig:
     embedding: EmbeddingConfig
     chroma: ChromaConfig
     pdf: PDFConfig
+    hybrid: Optional[HybridConfig] = None
     input_dir: Path = Path("./data/input")
     output_dir: Path = Path("./data/output")
     log_level: str = "INFO"
@@ -124,6 +141,25 @@ def load_config() -> AppConfig:
     )
     Path(chroma_persist_dir).mkdir(parents=True, exist_ok=True)
 
+    bm25_persist_dir = os.getenv("BM25_PERSIST_DIR", "./data/bm25")
+    Path(bm25_persist_dir).mkdir(parents=True, exist_ok=True)
+
+    hybrid_enabled_str = os.getenv("HYBRID_RETRIEVAL_ENABLED", "true").lower()
+    hybrid_enabled = hybrid_enabled_str in ("true", "1", "yes")
+
+    hybrid_config = HybridConfig(
+        enabled=hybrid_enabled,
+        retrieval_mode=os.getenv("RETRIEVAL_MODE", "hybrid").lower(),
+        dense_top_k=int(os.getenv("HYBRID_DENSE_TOP_K", "20")),
+        bm25_top_k=int(os.getenv("HYBRID_BM25_TOP_K", "20")),
+        final_top_k=int(os.getenv("HYBRID_FINAL_TOP_K", "5")),
+        dense_weight=float(os.getenv("HYBRID_DENSE_WEIGHT", "0.5")),
+        bm25_weight=float(os.getenv("HYBRID_BM25_WEIGHT", "0.5")),
+        fusion_method=os.getenv("HYBRID_FUSION_METHOD", "weighted").lower(),
+        rrf_k=int(os.getenv("HYBRID_RRF_K", "60")),
+        bm25_persist_dir=bm25_persist_dir,
+    )
+
     # Build configuration
     config = AppConfig(
         llm=LLMConfig(
@@ -153,6 +189,7 @@ def load_config() -> AppConfig:
                 "PDF_EXTRACTION_METHOD", "pdfplumber"
             ),
         ),
+        hybrid=hybrid_config,
         input_dir=input_dir,
         output_dir=output_dir,
         log_level=os.getenv("LOG_LEVEL", "INFO"),
@@ -190,6 +227,30 @@ def validate_config(config: AppConfig) -> bool:
 
     if config.llm.max_tokens <= 0:
         raise ValueError("LLM max_tokens must be positive")
+
+    if config.hybrid:
+        if config.hybrid.dense_top_k <= 0:
+            raise ValueError("Hybrid dense_top_k must be positive")
+        if config.hybrid.bm25_top_k <= 0:
+            raise ValueError("Hybrid bm25_top_k must be positive")
+        if config.hybrid.final_top_k <= 0:
+            raise ValueError("Hybrid final_top_k must be positive")
+        if config.hybrid.dense_weight < 0:
+            raise ValueError("Hybrid dense_weight cannot be negative")
+        if config.hybrid.bm25_weight < 0:
+            raise ValueError("Hybrid bm25_weight cannot be negative")
+        if config.hybrid.fusion_method not in ["weighted", "rrf"]:
+            raise ValueError(
+                f"Invalid fusion_method: {config.hybrid.fusion_method}. "
+                "Must be 'weighted' or 'rrf'"
+            )
+        if config.hybrid.retrieval_mode not in ["hybrid", "vector"]:
+            raise ValueError(
+                f"Invalid retrieval_mode: {config.hybrid.retrieval_mode}. "
+                "Must be 'hybrid' or 'vector'"
+            )
+        if config.hybrid.rrf_k <= 0:
+            raise ValueError("Hybrid rrf_k must be positive")
 
     logger.info("Configuration validation passed")
     return True

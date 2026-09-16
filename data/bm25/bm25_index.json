@@ -1,0 +1,98 @@
+{
+  "version": "1.0",
+  "k1": 1.5,
+  "b": 0.75,
+  "chunk_count": 6,
+  "chunks": [
+    {
+      "chunk_id": "doc_dda75b4545a4_p1_c0",
+      "text": "NIKHIL DHASMANA\n+91 9654861040 | nikhildhasmana5@gmail.com | linkedin.com/in/nikhil-dhasmana | github.com/Nikhildhasmana89\nPROFESSIONAL SUMMARY\nFull-Stack Developer specializing in the MERN stack, Next.js, and TypeScript, with hands-on experience designing and\nshipping production-style web applications end to end. Proficient in building RESTful APIs, implementing JWT-based\nauthentication and role-based access control (RBAC), and integrating real-time features with Socket.IO and WebSockets.",
+      "metadata": {
+        "chunk_index": 0,
+        "chunk_size": 494,
+        "document_id": "doc_dda75b4545a4",
+        "text": "NIKHIL DHASMANA\n+91 9654861040 | nikhildhasmana5@gmail.com | linkedin.com/in/nikhil-dhasmana | github.com/Nikhildhasmana89\nPROFESSIONAL SUMMARY\nFull-Stack Developer specializing in the MERN stack, Next.js, and TypeScript, with hands-on experience designing and\nshipping production-style web applications end to end. Proficient in building RESTful APIs, implementing JWT-based\nauthentication and role-based access control (RBAC), and integrating real-time features with Socket.IO and WebSockets.",
+        "chunk_id": "doc_dda75b4545a4_p1_c0",
+        "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+        "document_type": "pdf",
+        "page_number": 1,
+        "section": ""
+      }
+    },
+    {
+      "chunk_id": "doc_dda75b4545a4_p1_c1",
+      "text": "Experienced across the full development lifecycle, from MongoDB schema design and backend API architecture to\nresponsive React.js/Next.js frontend delivery, with a strong foundation in Git-based version control and API testing using\nPostman.\nTECHNICAL SKILLS\nFrontend: HTML5, CSS3, JavaScript, React.js, Next.js, TypeScript, Tailwind CSS\nBackend: Node.js, Express.js\nDatabase: MongoDB / MySQL\nAuthentication & Real-Time: JWT, Socket.IO, WebSockets\nVersion Control: Git, GitHub",
+      "metadata": {
+        "document_type": "pdf",
+        "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+        "chunk_size": 476,
+        "section": "",
+        "chunk_index": 1,
+        "document_id": "doc_dda75b4545a4",
+        "page_number": 1,
+        "chunk_id": "doc_dda75b4545a4_p1_c1",
+        "text": "Experienced across the full development lifecycle, from MongoDB schema design and backend API architecture to\nresponsive React.js/Next.js frontend delivery, with a strong foundation in Git-based version control and API testing using\nPostman.\nTECHNICAL SKILLS\nFrontend: HTML5, CSS3, JavaScript, React.js, Next.js, TypeScript, Tailwind CSS\nBackend: Node.js, Express.js\nDatabase: MongoDB / MySQL\nAuthentication & Real-Time: JWT, Socket.IO, WebSockets\nVersion Control: Git, GitHub"
+      }
+    },
+    {
+      "chunk_id": "doc_dda75b4545a4_p1_c2",
+      "text": "Tools: VS Code, Postman, npm\nBasics: REST APIs, Responsive Design, JSON\nPROJECT EXPERIENCE\nAI Delivery Freshkart — Full-Stack Grocery & E-Commerce Delivery Platform\nNext.js, TypeScript, React, Node.js, Express.js, MongoDB, Socket.IO, JWT, Tailwind CSS\n• Developed a full-stack grocery and e-commerce delivery platform using Next.js, TypeScript, React.js, Node.js,\nExpress.js, and MongoDB, enabling users to browse products, manage their cart, and place orders through an",
+      "metadata": {
+        "page_number": 1,
+        "document_type": "pdf",
+        "chunk_id": "doc_dda75b4545a4_p1_c2",
+        "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+        "chunk_index": 2,
+        "document_id": "doc_dda75b4545a4",
+        "section": "Technical Skills",
+        "text": "Tools: VS Code, Postman, npm\nBasics: REST APIs, Responsive Design, JSON\nPROJECT EXPERIENCE\nAI Delivery Freshkart — Full-Stack Grocery & E-Commerce Delivery Platform\nNext.js, TypeScript, React, Node.js, Express.js, MongoDB, Socket.IO, JWT, Tailwind CSS\n• Developed a full-stack grocery and e-commerce delivery platform using Next.js, TypeScript, React.js, Node.js,\nExpress.js, and MongoDB, enabling users to browse products, manage their cart, and place orders through an",
+        "chunk_size": 470
+      }
+    },
+    {
+      "chunk_id": "doc_dda75b4545a4_p1_c3",
+      "text": "end-to-end shopping workflow.\n• Implemented secure JWT-based authentication and Role-Based Access Control (RBAC) to manage user sessions and\npermissions across different roles, including customers and delivery partners.\n• Built real-time order tracking and delivery updates using Socket.IO and WebSockets, allowing live delivery-status\nupdates and delivery-partner information to be surfaced to customers for better order transparency.",
+      "metadata": {
+        "text": "end-to-end shopping workflow.\n• Implemented secure JWT-based authentication and Role-Based Access Control (RBAC) to manage user sessions and\npermissions across different roles, including customers and delivery partners.\n• Built real-time order tracking and delivery updates using Socket.IO and WebSockets, allowing live delivery-status\nupdates and delivery-partner information to be surfaced to customers for better order transparency.",
+        "document_id": "doc_dda75b4545a4",
+        "chunk_index": 3,
+        "chunk_size": 435,
+        "document_type": "pdf",
+        "chunk_id": "doc_dda75b4545a4_p1_c3",
+        "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+        "section": "Project Experience",
+        "page_number": 1
+      }
+    },
+    {
+      "chunk_id": "doc_dda75b4545a4_p1_c4",
+      "text": "• Designed and developed RESTful APIs using Node.js and Express.js for core operations including product\nmanagement, cart handling, order processing, and delivery assignment, with structured and query-optimized\nMongoDB schemas.\n• Developed a responsive and scalable frontend with Next.js, React.js, TypeScript, and Tailwind CSS, integrating the\nfrontend with backend APIs and real-time services to provide a seamless end-to-end user experience.\nEDUCATION",
+      "metadata": {
+        "chunk_size": 454,
+        "section": "Project Experience",
+        "chunk_id": "doc_dda75b4545a4_p1_c4",
+        "document_id": "doc_dda75b4545a4",
+        "page_number": 1,
+        "chunk_index": 4,
+        "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+        "text": "• Designed and developed RESTful APIs using Node.js and Express.js for core operations including product\nmanagement, cart handling, order processing, and delivery assignment, with structured and query-optimized\nMongoDB schemas.\n• Developed a responsive and scalable frontend with Next.js, React.js, TypeScript, and Tailwind CSS, integrating the\nfrontend with backend APIs and real-time services to provide a seamless end-to-end user experience.\nEDUCATION",
+        "document_type": "pdf"
+      }
+    },
+    {
+      "chunk_id": "doc_dda75b4545a4_p1_c5",
+      "text": "Inderprastha Engineering College (IPEC), Ghaziabad — B.Tech, Artificial Intelligence & Machine Learning (AIML), AKTU\nExpected Graduation: 2027\nCERTIFICATIONS\n• CRUD Operations in MongoDB — MongoDB (October 2025)\n• Database Programming with SQL – English — Oracle Academy (November 2025)",
+      "metadata": {
+        "text": "Inderprastha Engineering College (IPEC), Ghaziabad — B.Tech, Artificial Intelligence & Machine Learning (AIML), AKTU\nExpected Graduation: 2027\nCERTIFICATIONS\n• CRUD Operations in MongoDB — MongoDB (October 2025)\n• Database Programming with SQL – English — Oracle Academy (November 2025)",
+        "document_type": "pdf",
+        "page_number": 1,
+        "chunk_index": 5,
+        "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+        "chunk_id": "doc_dda75b4545a4_p1_c5",
+        "document_id": "doc_dda75b4545a4",
+        "section": "Education",
+        "chunk_size": 286
+      }
+    }
+  ]
+}

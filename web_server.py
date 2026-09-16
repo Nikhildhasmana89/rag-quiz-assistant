@@ -77,11 +77,15 @@ def query():
 
     try:
         pipeline, _ = get_pipeline()
+        mode = payload.get("retrieval_mode") or payload.get("mode")
+        fusion = payload.get("fusion_method") or payload.get("fusion")
         result = pipeline.rag_query(
             query=question,
             n_retrieve=max(1, min(int(payload.get("top_k", 5)), 20)),
             temperature=float(payload.get("temperature", 0.7)),
             max_tokens=max(1, int(payload.get("max_tokens", 2048))),
+            mode=mode,
+            fusion_method=fusion,
         )
         return jsonify(result)
     except Exception as error:
