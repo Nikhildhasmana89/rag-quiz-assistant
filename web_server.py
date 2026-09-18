@@ -79,6 +79,12 @@ def query():
         pipeline, _ = get_pipeline()
         mode = payload.get("retrieval_mode") or payload.get("mode")
         fusion = payload.get("fusion_method") or payload.get("fusion")
+        rerank = payload.get("rerank")
+        if rerank is None and "no_rerank" in payload:
+            rerank = not payload.get("no_rerank")
+        verify = payload.get("verify")
+        if verify is None and "no_verify" in payload:
+            verify = not payload.get("no_verify")
         result = pipeline.rag_query(
             query=question,
             n_retrieve=max(1, min(int(payload.get("top_k", 5)), 20)),
@@ -86,7 +92,10 @@ def query():
             max_tokens=max(1, int(payload.get("max_tokens", 2048))),
             mode=mode,
             fusion_method=fusion,
+            rerank=rerank,
+            verify=verify,
         )
+
         return jsonify(result)
     except Exception as error:
         logger.exception("RAG query failed")

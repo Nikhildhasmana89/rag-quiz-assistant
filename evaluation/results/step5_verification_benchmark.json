@@ -1,0 +1,812 @@
+{
+  "timestamp": "2026-09-18T07:08:58Z",
+  "dataset": "step5_verification_cases.json",
+  "total_test_cases": 10,
+  "classification_accuracy_pct": 90.0,
+  "status_distribution": {
+    "supported": 5,
+    "partially_supported": 2,
+    "contradicted": 1,
+    "insufficient_evidence": 2
+  },
+  "latency_profile_ms": {
+    "mean_retrieval_ms": 500.71,
+    "mean_generation_ms": 2252.62,
+    "mean_verification_ms": 8310.19,
+    "mean_total_step4_ms": 2753.33,
+    "mean_total_step5_ms": 11063.51
+  },
+  "results": [
+    {
+      "id": "v001",
+      "category": "Case A - Clearly Supported",
+      "query": "What is Nikhil Dhasmana's educational qualification and institution?",
+      "candidate_answer": "Nikhil Dhasmana is pursuing a B.Tech in Artificial Intelligence & Machine Learning (AIML) at Inderprastha Engineering College (IPEC), Ghaziabad, affiliated with AKTU, with expected graduation in 2027.",
+      "expected_status": "supported",
+      "verified_status": "supported",
+      "status_match": true,
+      "notes": "Directly supported by Education chunk in resume.",
+      "baseline_step4": {
+        "response": "Nikhil Dhasmana is pursuing a **B.Tech degree in Artificial Intelligence & Machine Learning (AIML)** at **Inderprastha Engineering College (IPEC), Ghaziabad** (affiliated with AKTU).",
+        "retrieval_latency_ms": 929.87,
+        "generation_latency_ms": 1561.32,
+        "total_latency_ms": 2491.19,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "supported",
+        "supported_claims": [
+          "Nikhil Dhasmana is pursuing a B.Tech in Artificial Intelligence & Machine Learning (AIML).",
+          "The B.Tech program is at Inderprastha Engineering College (IPEC) in Ghaziabad.",
+          "Inderprastha Engineering College (IPEC) is affiliated with AKTU.",
+          "Nikhil Dhasmana's expected graduation year is 2027."
+        ],
+        "unsupported_claims": [],
+        "contradicted_claims": [],
+        "claims": [
+          {
+            "claim": "Nikhil Dhasmana is pursuing a B.Tech in Artificial Intelligence & Machine Learning (AIML).",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c5"
+            ]
+          },
+          {
+            "claim": "The B.Tech program is at Inderprastha Engineering College (IPEC) in Ghaziabad.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c5"
+            ]
+          },
+          {
+            "claim": "Inderprastha Engineering College (IPEC) is affiliated with AKTU.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c5"
+            ]
+          },
+          {
+            "claim": "Nikhil Dhasmana's expected graduation year is 2027.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c5"
+            ]
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c5",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Education",
+            "retrieval_source": "dense",
+            "reranker_score": -10.952981948852539,
+            "hybrid_score": 0.44487719363235734,
+            "dense_score": 0.6285949900758804
+          }
+        ],
+        "verification_latency_ms": 2912.91,
+        "total_pipeline_latency_ms": 5404.1
+      }
+    },
+    {
+      "id": "v002",
+      "category": "Case A - Clearly Supported",
+      "query": "How does AI Delivery Freshkart handle real-time delivery tracking?",
+      "candidate_answer": "The platform utilizes Socket.IO and WebSockets for real-time bi-directional communication, providing live delivery-status updates and delivery-partner information to customers.",
+      "expected_status": "supported",
+      "verified_status": "supported",
+      "status_match": true,
+      "notes": "Directly supported by Project Experience chunk.",
+      "baseline_step4": {
+        "response": "AI Delivery\u202fFreshkart provides real\u2011time delivery tracking by leveraging **Socket.IO and WebSockets**.  \nWhen an order is placed, the backend (Node.js/Express) pushes live status updates and delivery\u2011partner information through a WebSocket connection to the client. The frontend (Next.js/React) listens to these Socket.IO events and instantly displays the current delivery status, giving customers up\u2011to\u2011date visibility of their order\u2019s progress.",
+        "retrieval_latency_ms": 391.23,
+        "generation_latency_ms": 964.61,
+        "total_latency_ms": 1355.84,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "supported",
+        "supported_claims": [
+          "The platform utilizes Socket.IO and WebSockets for real-time bi-directional communication.",
+          "The platform provides live delivery-status updates to customers.",
+          "The platform provides delivery-partner information to customers."
+        ],
+        "unsupported_claims": [],
+        "contradicted_claims": [],
+        "claims": [
+          {
+            "claim": "The platform utilizes Socket.IO and WebSockets for real-time bi-directional communication.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c3"
+            ]
+          },
+          {
+            "claim": "The platform provides live delivery-status updates to customers.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c3"
+            ]
+          },
+          {
+            "claim": "The platform provides delivery-partner information to customers.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c3"
+            ]
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c3",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": 0.34230172634124756,
+            "hybrid_score": 0.966408979461488,
+            "dense_score": 0.6405650736743438
+          }
+        ],
+        "verification_latency_ms": 1962.64,
+        "total_pipeline_latency_ms": 3318.48
+      }
+    },
+    {
+      "id": "v003",
+      "category": "Case B - Partially Supported",
+      "query": "What database and caching technologies were used in AI Delivery Freshkart?",
+      "candidate_answer": "The project uses query-optimized MongoDB schemas for order and cart handling, and integrates Redis in-memory caching to reduce database read latencies.",
+      "expected_status": "partially_supported",
+      "verified_status": "partially_supported",
+      "status_match": true,
+      "notes": "MongoDB is supported; Redis in-memory caching is unsupported/hallucinated.",
+      "baseline_step4": {
+        "response": "The AI Delivery Freshkart project used **MongoDB** as its database (with MongoDB also listed under the developer\u2019s \u201cDatabase\u201d skill set, alongside MySQL).  \nNo caching technology (e.g., Redis, Memcached, etc.) is mentioned in the provided information.",
+        "retrieval_latency_ms": 396.67,
+        "generation_latency_ms": 891.85,
+        "total_latency_ms": 1288.52,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "partially_supported",
+        "supported_claims": [
+          "The project uses query-optimized MongoDB schemas for order and cart handling."
+        ],
+        "unsupported_claims": [
+          "The project integrates Redis in-memory caching to reduce database read latencies."
+        ],
+        "contradicted_claims": [],
+        "claims": [
+          {
+            "claim": "The project uses query-optimized MongoDB schemas for order and cart handling.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c4"
+            ]
+          },
+          {
+            "claim": "The project integrates Redis in-memory caching to reduce database read latencies.",
+            "status": "insufficient_evidence",
+            "evidence_ids": []
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c4",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": -9.224771499633789,
+            "hybrid_score": 0.24887307613774143,
+            "dense_score": 0.6118262444588719
+          }
+        ],
+        "verification_latency_ms": 1839.3,
+        "total_pipeline_latency_ms": 3127.82
+      }
+    },
+    {
+      "id": "v004",
+      "category": "Case B - Partially Supported",
+      "query": "Which certifications did Nikhil complete and what cloud certifications does he hold?",
+      "candidate_answer": "Nikhil completed CRUD Operations in MongoDB in October 2025 and Database Programming with SQL in November 2025, and holds an AWS Certified Solutions Architect Associate certificate.",
+      "expected_status": "partially_supported",
+      "verified_status": "partially_supported",
+      "status_match": true,
+      "notes": "MongoDB and Oracle SQL certifications are supported; AWS certification is unsupported.",
+      "baseline_step4": {
+        "response": "**Certifications Nikhil has completed**\n\n- **CRUD Operations in MongoDB** \u2013 issued by MongoDB (October\u202f2025)  \n- **Database Programming with SQL \u2013 English** \u2013 issued by Oracle Academy (November\u202f2025)\n\n**Cloud certifications**\n\nThe provided information does not list any cloud\u2011related certifications for Nikhil.",
+        "retrieval_latency_ms": 538.19,
+        "generation_latency_ms": 1084.7,
+        "total_latency_ms": 1622.89,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "partially_supported",
+        "supported_claims": [
+          "Nikhil completed CRUD Operations in MongoDB in October 2025.",
+          "Nikhil completed Database Programming with SQL in November 2025."
+        ],
+        "unsupported_claims": [
+          "Nikhil holds an AWS Certified Solutions Architect Associate certificate."
+        ],
+        "contradicted_claims": [],
+        "claims": [
+          {
+            "claim": "Nikhil completed CRUD Operations in MongoDB in October 2025.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c5"
+            ]
+          },
+          {
+            "claim": "Nikhil completed Database Programming with SQL in November 2025.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c5"
+            ]
+          },
+          {
+            "claim": "Nikhil holds an AWS Certified Solutions Architect Associate certificate.",
+            "status": "insufficient_evidence",
+            "evidence_ids": []
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c5",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Education",
+            "retrieval_source": "hybrid",
+            "reranker_score": -8.868192672729492,
+            "hybrid_score": 0.8899819105453748,
+            "dense_score": 0.6011854635606283
+          }
+        ],
+        "verification_latency_ms": 1690.01,
+        "total_pipeline_latency_ms": 3312.89
+      }
+    },
+    {
+      "id": "v005",
+      "category": "Case C - Contradicted",
+      "query": "When did Nikhil graduate and from which university?",
+      "candidate_answer": "Nikhil graduated in 2022 with a Bachelor of Science from Delhi University.",
+      "expected_status": "contradicted",
+      "verified_status": "insufficient_evidence",
+      "status_match": false,
+      "notes": "Directly contradicts document: IPEC Ghaziabad, AKTU, expected graduation 2027.",
+      "baseline_step4": {
+        "response": "Nikhil is still a student. His r\u00e9sum\u00e9 lists:\n\n- **University:** Inderprastha Engineering College (IPEC), Ghaziabad \u2013 affiliated with AKTU  \n- **Degree:** B.Tech in Artificial Intelligence & Machine Learning (AIML)  \n- **Graduation:** Expected in **2027**  \n\nSo he has not yet graduated; his anticipated graduation year is 2027.",
+        "retrieval_latency_ms": 383.09,
+        "generation_latency_ms": 3572.46,
+        "total_latency_ms": 3955.55,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "insufficient_evidence",
+        "supported_claims": [],
+        "unsupported_claims": [
+          "Nikhil graduated in 2022.",
+          "Nikhil graduated with a Bachelor of Science.",
+          "Nikhil graduated from Delhi University."
+        ],
+        "contradicted_claims": [],
+        "claims": [
+          {
+            "claim": "Nikhil graduated in 2022.",
+            "status": "insufficient_evidence",
+            "evidence_ids": []
+          },
+          {
+            "claim": "Nikhil graduated with a Bachelor of Science.",
+            "status": "insufficient_evidence",
+            "evidence_ids": []
+          },
+          {
+            "claim": "Nikhil graduated from Delhi University.",
+            "status": "insufficient_evidence",
+            "evidence_ids": []
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c0",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "",
+            "retrieval_source": "hybrid",
+            "reranker_score": -7.966348648071289,
+            "hybrid_score": 0.9856969509437736,
+            "dense_score": 0.5669160091816436
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c5",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Education",
+            "retrieval_source": "dense",
+            "reranker_score": -9.934289932250977,
+            "hybrid_score": 0.5,
+            "dense_score": 0.569388246582357
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c3",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.26449203491211,
+            "hybrid_score": 0.05439951605572471,
+            "dense_score": 0.4885300150176567
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c4",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.293121337890625,
+            "hybrid_score": 0.024215125760137332,
+            "dense_score": 0.48296480669220493
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c1",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.312568664550781,
+            "hybrid_score": 0.38687953949420456,
+            "dense_score": 0.4941062893557793
+          }
+        ],
+        "verification_latency_ms": 8125.63,
+        "total_pipeline_latency_ms": 12081.19
+      }
+    },
+    {
+      "id": "v006",
+      "category": "Case C - Contradicted",
+      "query": "How is authentication handled in AI Delivery Freshkart?",
+      "candidate_answer": "The platform relies on basic session cookies and OAuth2 without JWT tokens or role-based access control.",
+      "expected_status": "contradicted",
+      "verified_status": "contradicted",
+      "status_match": true,
+      "notes": "Directly contradicts document: explicitly states secure JWT-based authentication and RBAC.",
+      "baseline_step4": {
+        "response": "In **AI\u202fDelivery\u202fFreshkart** authentication is managed with **JSON Web Tokens (JWT)**:\n\n* **JWT\u2011based login** \u2013 When a user (customer, delivery partner, etc.) signs in, the server issues a signed JWT that the client stores (typically in a cookie or local storage) and sends with each subsequent request.\n* **Secure session handling** \u2013 The token is verified on every protected API call, ensuring that only authenticated requests are processed.\n* **Role\u2011Based Access Control (RBAC)** \u2013 The JWT payload includes the user\u2019s role, and middleware checks this role to enforce permissions (e.g., customers can view and place orders, delivery partners can access order\u2011assignment endpoints, admins have broader rights).\n\nThus, authentication relies on JWT for stateless, secure session management, combined with RBAC to control what each authenticated user can do within the platform.",
+        "retrieval_latency_ms": 481.59,
+        "generation_latency_ms": 6817.52,
+        "total_latency_ms": 7299.1,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "contradicted",
+        "supported_claims": [],
+        "unsupported_claims": [
+          "The platform relies on basic session cookies.",
+          "The platform relies on OAuth2."
+        ],
+        "contradicted_claims": [
+          "The platform does not use JWT tokens.",
+          "The platform does not have role-based access control."
+        ],
+        "claims": [
+          {
+            "claim": "The platform relies on basic session cookies.",
+            "status": "insufficient_evidence",
+            "evidence_ids": []
+          },
+          {
+            "claim": "The platform relies on OAuth2.",
+            "status": "insufficient_evidence",
+            "evidence_ids": []
+          },
+          {
+            "claim": "The platform does not use JWT tokens.",
+            "status": "contradicted",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c2",
+              "doc_dda75b4545a4_p1_c3",
+              "doc_dda75b4545a4_p0"
+            ]
+          },
+          {
+            "claim": "The platform does not have role-based access control.",
+            "status": "contradicted",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c3",
+              "doc_dda75b4545a4_p0"
+            ]
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c3",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": -3.2001218795776367,
+            "hybrid_score": 0.6709093753773725,
+            "dense_score": 0.630194345797989
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c2",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Technical Skills",
+            "retrieval_source": "hybrid",
+            "reranker_score": -0.170103058218956,
+            "hybrid_score": 0.6923904920528348,
+            "dense_score": 0.5727816646677435
+          }
+        ],
+        "verification_latency_ms": 17837.48,
+        "total_pipeline_latency_ms": 25136.59
+      }
+    },
+    {
+      "id": "v007",
+      "category": "Case D - Insufficient Evidence",
+      "query": "What are the daily active users (DAU) and server infrastructure costs for AI Delivery Freshkart?",
+      "candidate_answer": "AI Delivery Freshkart supports 25,000 daily active users with an AWS infrastructure cost of $350 per month.",
+      "expected_status": "insufficient_evidence",
+      "verified_status": "insufficient_evidence",
+      "status_match": true,
+      "notes": "The document contains zero evidence regarding DAU or infrastructure costs.",
+      "baseline_step4": {
+        "response": "The provided information does not include any data about the daily active users (DAU) or the server infrastructure costs for the AI Delivery Freshkart platform. Therefore, I cannot answer those specific questions based on the given documents.",
+        "retrieval_latency_ms": 446.92,
+        "generation_latency_ms": 1006.62,
+        "total_latency_ms": 1453.54,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "insufficient_evidence",
+        "supported_claims": [],
+        "unsupported_claims": [
+          "AI Delivery Freshkart supports 25,000 daily active users",
+          "AI Delivery Freshkart has an AWS infrastructure cost of $350 per month"
+        ],
+        "contradicted_claims": [],
+        "claims": [
+          {
+            "claim": "AI Delivery Freshkart supports 25,000 daily active users",
+            "status": "insufficient_evidence",
+            "evidence_ids": []
+          },
+          {
+            "claim": "AI Delivery Freshkart has an AWS infrastructure cost of $350 per month",
+            "status": "insufficient_evidence",
+            "evidence_ids": []
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c2",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Technical Skills",
+            "retrieval_source": "hybrid",
+            "reranker_score": -3.189422369003296,
+            "hybrid_score": 1.0,
+            "dense_score": 0.5947268538422186
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c3",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": -10.622472763061523,
+            "hybrid_score": 0.19227624611866626,
+            "dense_score": 0.5613463868806235
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c4",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.025156021118164,
+            "hybrid_score": 0.3549769448348628,
+            "dense_score": 0.5711288468064039
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c1",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.299793243408203,
+            "hybrid_score": 0.03507653547191367,
+            "dense_score": 0.5575466879105714
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c5",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Education",
+            "retrieval_source": "dense",
+            "reranker_score": -11.3958740234375,
+            "hybrid_score": 0.4487041436428233,
+            "dense_score": 0.590912476940287
+          }
+        ],
+        "verification_latency_ms": 14982.05,
+        "total_pipeline_latency_ms": 16435.59
+      }
+    },
+    {
+      "id": "v008",
+      "category": "Case E - Multi-Document / Multi-Section",
+      "query": "Synthesize the developer's skills profile connecting Technical Skills with Project Experience.",
+      "candidate_answer": "The developer lists React, Next.js, Node.js, Express.js, and MongoDB under Technical Skills, and demonstrates their applied usage in AI Delivery Freshkart for RESTful APIs, query optimization, and responsive Tailwind CSS UI.",
+      "expected_status": "supported",
+      "verified_status": "supported",
+      "status_match": true,
+      "notes": "Synthesizes evidence across Skills, Projects, and Tools sections.",
+      "baseline_step4": {
+        "response": "**Developer Skills Profile \u2013 Nikhil Dhasmana**\n\n| Technical Skill | How It Was Applied in Project Experience (AI Delivery Freshkart) |\n|-----------------|-------------------------------------------------------------------|\n| **Frontend**<br>HTML5, CSS3, JavaScript, React.js, Next.js, TypeScript, Tailwind CSS | \u2022 Built a **responsive UI** for the grocery\u2011e\u2011commerce platform using **React.js** and **Next.js**.<br>\u2022 Leveraged **TypeScript** for type\u2011safe component development.<br>\u2022 Styled the application with **Tailwind CSS**, ensuring a modern, mobile\u2011first design.<br>\u2022 Utilized standard **HTML5/CSS3/JavaScript** fundamentals to create interactive pages (product browsing, cart management, order checkout). |\n| **Backend**<br>Node.js, Express.js | \u2022 Designed and implemented **RESTful APIs** with **Node.js** and **Express.js** to handle product CRUD, cart operations, order processing, and delivery assignment.<br>\u2022 Structured the server logic to support the full e\u2011commerce workflow, from product retrieval to order finalization. |\n| **Database**<br>MongoDB, MySQL | \u2022 Created **MongoDB schemas** that are **query\u2011optimized** for product, cart, order, and delivery data.<br>\u2022 Managed data persistence and retrieval through the APIs, demonstrating end\u2011to\u2011end data flow. (MySQL is listed as a skill but not used in the cited project.) |\n| **Authentication & Real\u2011Time**<br>JWT, Socket.IO, WebSockets | \u2022 Implemented **JWT\u2011based authentication** and **role\u2011based access control (RBAC)** to secure user sessions and protect API endpoints.<br>\u2022 Integrated **Socket.IO** (WebSockets) to provide real\u2011time features such as live order status updates and delivery tracking. |\n| **Version Control**<br>Git, GitHub | \u2022 Utilized **Git** for source\u2011code management throughout the development lifecycle, enabling collaborative work and reliable versioning of the project repository on **GitHub**. |\n| **Testing & Tooling**<br>Postman, VS Code, npm | \u2022 Tested API endpoints with **Postman**, ensuring correct request/response behavior.<br>\u2022 Developed the codebase in **VS Code**, managing dependencies with **npm**. |\n| **Fundamentals**<br>REST APIs, Responsive Design, JSON | \u2022 Designed **RESTful services** that expose JSON payloads to the frontend.<br>\u2022 Ensured the UI adapts to different screen sizes through **responsive design** principles. |\n\n### Narrative Summary\nNikhil is a full\u2011stack MERN developer who consistently bridges his technical toolbox with real\u2011world product delivery. In the **AI Delivery Freshkart** project, he translated his **frontend expertise** (React, Next.js, TypeScript, Tailwind) into a polished, responsive shopping experience, while his **backend skills** (Node.js, Express) powered a robust set of REST APIs. His **database knowledge** was applied through carefully designed MongoDB schemas that support efficient queries for product and order data. Security and interactivity were reinforced with **JWT authentication** and **Socket.IO/WebSockets**, delivering real\u2011time order tracking. Throughout, he adhered to best practices in **Git\u2011based version control**, **API testing with Postman**, and modern development workflows using VS Code and npm. This cohesive blend of skills demonstrates his ability to take a concept from schema design to a production\u2011ready, full\u2011stack web application.",
+        "retrieval_latency_ms": 404.23,
+        "generation_latency_ms": 4869.05,
+        "total_latency_ms": 5273.28,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "supported",
+        "supported_claims": [
+          "The developer lists React, Next.js, Node.js, Express.js, and MongoDB under Technical Skills.",
+          "The developer demonstrates applied usage of these technologies in AI Delivery Freshkart for RESTful APIs.",
+          "The developer demonstrates applied usage of these technologies in AI Delivery Freshkart for query optimization.",
+          "The developer demonstrates applied usage of these technologies in AI Delivery Freshkart for a responsive Tailwind CSS UI."
+        ],
+        "unsupported_claims": [],
+        "contradicted_claims": [],
+        "claims": [
+          {
+            "claim": "The developer lists React, Next.js, Node.js, Express.js, and MongoDB under Technical Skills.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c1"
+            ]
+          },
+          {
+            "claim": "The developer demonstrates applied usage of these technologies in AI Delivery Freshkart for RESTful APIs.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c4"
+            ]
+          },
+          {
+            "claim": "The developer demonstrates applied usage of these technologies in AI Delivery Freshkart for query optimization.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c4"
+            ]
+          },
+          {
+            "claim": "The developer demonstrates applied usage of these technologies in AI Delivery Freshkart for a responsive Tailwind CSS UI.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c4"
+            ]
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c1",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "",
+            "retrieval_source": "hybrid",
+            "reranker_score": -3.900655746459961,
+            "hybrid_score": 0.8066365252558303,
+            "dense_score": 0.5604368230946838
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c4",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": -10.344738006591797,
+            "hybrid_score": 0.152659852290473,
+            "dense_score": 0.5332814923984606
+          }
+        ],
+        "verification_latency_ms": 17307.99,
+        "total_pipeline_latency_ms": 22581.27
+      }
+    },
+    {
+      "id": "v009",
+      "category": "Case F - Numerical Metrics",
+      "query": "What is the contact phone number and expected graduation year listed in the resume?",
+      "candidate_answer": "The document lists contact phone number +91 9654861040 and expected graduation year 2027.",
+      "expected_status": "supported",
+      "verified_status": "supported",
+      "status_match": true,
+      "notes": "Exact numerical and alphanumeric phone/year values.",
+      "baseline_step4": {
+        "response": "- **Contact phone number:**\u202f+91\u202f9654861040  \n- **Expected graduation year:**\u202f2027",
+        "retrieval_latency_ms": 486.03,
+        "generation_latency_ms": 854.92,
+        "total_latency_ms": 1340.95,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "supported",
+        "supported_claims": [
+          "The contact phone number listed in the resume is +91 9654861040.",
+          "The expected graduation year listed in the resume is 2027."
+        ],
+        "unsupported_claims": [],
+        "contradicted_claims": [],
+        "claims": [
+          {
+            "claim": "The contact phone number listed in the resume is +91 9654861040.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c0"
+            ]
+          },
+          {
+            "claim": "The expected graduation year listed in the resume is 2027.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c5"
+            ]
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c5",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Education",
+            "retrieval_source": "hybrid",
+            "reranker_score": -4.696125030517578,
+            "hybrid_score": 1.0,
+            "dense_score": 0.6132824962794845
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c0",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.416797637939453,
+            "hybrid_score": 0.47505367103784724,
+            "dense_score": 0.539372287661345
+          }
+        ],
+        "verification_latency_ms": 7501.94,
+        "total_pipeline_latency_ms": 8842.89
+      }
+    },
+    {
+      "id": "v010",
+      "category": "Case G - Unanswerable",
+      "query": "What automated computer vision models are used in Freshkart for grocery inspection?",
+      "candidate_answer": "The provided documents do not contain any information about computer vision models or automated grocery inspection in Freshkart.",
+      "expected_status": "supported",
+      "verified_status": "supported",
+      "status_match": true,
+      "notes": "Truthful and grounded acknowledgment that information is missing.",
+      "baseline_step4": {
+        "response": "The provided information does not mention any automated computer\u2011vision models used in Freshkart for grocery inspection. Therefore, I cannot answer that question based on the given documents.",
+        "retrieval_latency_ms": 549.28,
+        "generation_latency_ms": 903.12,
+        "total_latency_ms": 1452.4,
+        "n_chunks": 5
+      },
+      "step5_verification": {
+        "status": "supported",
+        "supported_claims": [
+          "The provided documents do not contain any information about computer vision models or automated grocery inspection in Freshkart."
+        ],
+        "unsupported_claims": [],
+        "contradicted_claims": [],
+        "claims": [
+          {
+            "claim": "The provided documents do not contain any information about computer vision models or automated grocery inspection in Freshkart.",
+            "status": "supported",
+            "evidence_ids": [
+              "doc_dda75b4545a4_p1_c2",
+              "doc_dda75b4545a4_p1_c3",
+              "doc_dda75b4545a4_p1_c4",
+              "doc_dda75b4545a4_p1_c1",
+              "doc_dda75b4545a4_p1_c5"
+            ]
+          }
+        ],
+        "evidence_references": [
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c2",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Technical Skills",
+            "retrieval_source": "hybrid",
+            "reranker_score": -3.3560550212860107,
+            "hybrid_score": 1.0,
+            "dense_score": 0.575201019488425
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c1",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.455085754394531,
+            "hybrid_score": 0.0,
+            "dense_score": 0.5254076107805978
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c5",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Education",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.464303970336914,
+            "hybrid_score": 0.2899178568293563,
+            "dense_score": 0.5505392783896935
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c4",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.415504455566406,
+            "hybrid_score": 0.22225219934820967,
+            "dense_score": 0.5416971650588808
+          },
+          {
+            "chunk_id": "doc_dda75b4545a4_p1_c3",
+            "document_id": "doc_dda75b4545a4",
+            "source_file": "Nikhil_Dhasmana_Resume_2.pdf",
+            "page_number": 1,
+            "section": "Project Experience",
+            "retrieval_source": "hybrid",
+            "reranker_score": -11.325418472290039,
+            "hybrid_score": 0.4360005791518048,
+            "dense_score": 0.5623444874559276
+          }
+        ],
+        "verification_latency_ms": 8941.92,
+        "total_pipeline_latency_ms": 10394.32
+      }
+    }
+  ]
+}

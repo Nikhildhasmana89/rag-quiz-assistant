@@ -1,15 +1,17 @@
-"""RAG pipeline orchestrating the complete workflow."""
+"""RAG pipeline orchestrating the complete workflow with Hybrid Retrieval and Neural Reranking."""
 
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+import copy
 import hashlib
 import logging
+from pathlib import Path
+import time
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class RAGPipeline:
-    """Complete Retrieval Augmented Generation pipeline with Hybrid Retrieval."""
+    """Complete Retrieval Augmented Generation pipeline with Hybrid Retrieval & Neural Reranking."""
 
     def __init__(
         self,
@@ -18,6 +20,8 @@ class RAGPipeline:
         vector_store,
         llm_client,
         hybrid_retriever=None,
+        reranker=None,
+        verifier=None,
         config=None,
     ):
         """Initialize RAG pipeline.
@@ -28,6 +32,8 @@ class RAGPipeline:
             vector_store: ChromaVectorStore instance
             llm_client: LLMClient instance
             hybrid_retriever: Optional HybridRetriever instance
+            reranker: Optional CrossEncoderReranker instance
+            verifier: Optional EvidenceVerifier instance
             config: Optional AppConfig instance
         """
         self.pdf_extractor = pdf_extractor
@@ -39,11 +45,12 @@ class RAGPipeline:
         # Initialize or wire hybrid retriever
         if hybrid_retriever is not None:
             self.hybrid_retriever = hybrid_retriever
-        else:
+        elif config is not None:
             try:
                 from app.retrieval import BM25Retriever, HybridRetriever
+
                 persist_dir = "./data/bm25"
-                if config and hasattr(config, "hybrid") and config.hybrid:
+                if hasattr(config, "hybrid") and config.hybrid:
                     persist_dir = config.hybrid.bm25_persist_dir
                     dense_w = config.hybrid.dense_weight
                     bm25_w = config.hybrid.bm25_weight
@@ -79,13 +86,66 @@ class RAGPipeline:
             except Exception as e:
                 logger.warning(f"Could not auto-initialize HybridRetriever: {e}")
                 self.hybrid_retriever = None
+        else:
+            try:
+                from app.retrieval import BM25Retriever, HybridRetriever
+
+                # In-memory BM25 without loading from disk, preserving mock test isolation
+                bm25 = BM25Retriever()
+                self.hybrid_retriever = HybridRetriever(
+                    vector_store=self.vector_store,
+                    bm25_retriever=bm25,
+                )
+            except Exception as e:
+                logger.warning(f"Could not initialize default HybridRetriever: {e}")
+                self.hybrid_retriever = None
+
+        # Initialize or wire CrossEncoder reranker
+        if reranker is not None:
+            self.reranker = reranker
+        elif config is not None and getattr(config, "rerank", None) and config.rerank.enabled:
+            try:
+                from app.reranking import CrossEncoderReranker
+
+                self.reranker = CrossEncoderReranker(
+                    model_name=config.rerank.model_name,
+                    batch_size=config.rerank.batch_size,
+                )
+            except Exception as e:
+                logger.warning(f"Could not auto-initialize CrossEncoderReranker: {e}")
+                self.reranker = None
+        else:
+            self.reranker = None
+
+        # Initialize or wire EvidenceVerifier
+
+        if verifier is not None:
+            self.verifier = verifier
+        elif config is not None and getattr(config, "verification", None) and config.verification.enabled:
+            try:
+                from app.verification import EvidenceVerifier
+
+                self.verifier = EvidenceVerifier(
+                    llm_client=self.llm_client,
+                    config=self.config,
+                )
+            except Exception as e:
+                logger.warning(f"Could not auto-initialize EvidenceVerifier: {e}")
+                self.verifier = None
+        else:
+            self.verifier = None
 
         if config and hasattr(config, "hybrid") and config.hybrid:
             self.retrieval_mode = config.hybrid.retrieval_mode
         else:
             self.retrieval_mode = "hybrid" if self.hybrid_retriever is not None else "vector"
 
-        logger.info(f"Initialized RAGPipeline (retrieval_mode={self.retrieval_mode})")
+        logger.info(
+            f"Initialized RAGPipeline (retrieval_mode={self.retrieval_mode}, "
+            f"reranker={'enabled' if (self.reranker and getattr(self.reranker, 'model', None)) else 'disabled'}, "
+            f"verifier={'enabled' if self.verifier is not None else 'disabled'})"
+        )
+
 
     def ingest_pdf(
         self,
@@ -136,7 +196,9 @@ class RAGPipeline:
         global_chunk_idx = 0
 
         # Try structure-aware page chunking if available
-        if hasattr(self.text_chunker, "chunk_page_with_metadata") and callable(getattr(self.text_chunker, "chunk_page_with_metadata")):
+        if hasattr(self.text_chunker, "chunk_page_with_metadata") and callable(
+            getattr(self.text_chunker, "chunk_page_with_metadata")
+        ):
             try:
                 for page_idx, page_text in enumerate(texts):
                     page_number = page_idx + 1
@@ -156,7 +218,12 @@ class RAGPipeline:
                             if isinstance(chunk_item, dict) and "text" in chunk_item:
                                 all_chunks.append(chunk_item["text"])
                                 all_metadatas.append(chunk_item)
-                                all_ids.append(chunk_item.get("chunk_id", f"{document_id}_p{page_number}_c{global_chunk_idx}"))
+                                all_ids.append(
+                                    chunk_item.get(
+                                        "chunk_id",
+                                        f"{document_id}_p{page_number}_c{global_chunk_idx}",
+                                    )
+                                )
                                 if chunk_item.get("section"):
                                     current_section = chunk_item["section"]
                                 global_chunk_idx += 1
@@ -224,6 +291,7 @@ class RAGPipeline:
         query: str,
         n_results: int = 5,
         mode: Optional[str] = None,
+        rerank: Optional[bool] = None,
     ) -> List[str]:
         """Retrieve relevant documents for a query.
 
@@ -231,33 +299,18 @@ class RAGPipeline:
             query: Query text
             n_results: Number of results to retrieve
             mode: Optional 'vector' or 'hybrid' (defaults to self.retrieval_mode)
+            rerank: Optional boolean to enable/disable reranking
 
         Returns:
-            List of relevant document chunks
+            List of relevant document chunk strings
         """
-        logger.debug(f"Retrieving documents for query: {query}")
-        active_mode = (mode or self.retrieval_mode).lower()
-
-        if active_mode == "vector" or not self.hybrid_retriever:
-            if hasattr(self.vector_store, "collection") and self.vector_store.collection is None:
-                self.vector_store.create_collection()
-
-            results = self.vector_store.query(
-                query_texts=[query],
-                n_results=n_results,
-            )
-
-            documents = results["documents"][0] if (results and "documents" in results and results["documents"]) else []
-            logger.info(f"Retrieved {len(documents)} documents (vector)")
-            return documents
-
-        results = self.hybrid_retriever.retrieve(
+        results = self.retrieve_with_metadata(
             query=query,
             n_results=n_results,
-            mode="hybrid",
+            mode=mode,
+            rerank=rerank,
         )
-        logger.info(f"Retrieved {len(results)} documents (hybrid)")
-        return results
+        return [c["text"] for c in results if "text" in c]
 
     def retrieve_with_metadata(
         self,
@@ -265,21 +318,24 @@ class RAGPipeline:
         n_results: int = 5,
         mode: Optional[str] = None,
         fusion_method: Optional[str] = None,
+        rerank: Optional[bool] = None,
     ) -> List[Dict[str, Any]]:
-        """Retrieve relevant documents along with provenance and retrieval metadata.
+        """Retrieve relevant documents along with provenance, retrieval scores, and optional reranker scores.
 
         Args:
             query: Query text
             n_results: Number of results to retrieve
             mode: Optional 'vector' or 'hybrid' (defaults to self.retrieval_mode)
             fusion_method: Optional 'weighted' or 'rrf'
+            rerank: Optional boolean to toggle neural reranking (defaults to config setting)
 
         Returns:
-            List of dicts containing 'text', 'metadata', 'id', 'chunk_id', 'dense_score', 'hybrid_score', 'retrieval_source', 'rank'
+            List of candidate dictionaries
         """
         logger.debug(f"Retrieving documents with metadata for query: {query}")
         active_mode = (mode or self.retrieval_mode).lower()
 
+        # Pure vector retrieval mode
         if active_mode == "vector" or not self.hybrid_retriever:
             if hasattr(self.vector_store, "collection") and self.vector_store.collection is None:
                 self.vector_store.create_collection()
@@ -317,7 +373,47 @@ class RAGPipeline:
             logger.info(f"Retrieved {len(structured)} documents with metadata (vector)")
             return structured
 
-        # Hybrid retrieval
+        # Hybrid retrieval mode: determine whether to rerank
+        should_rerank = rerank
+        if should_rerank is None:
+            if self.reranker is not None and getattr(self.reranker, "model", None) is not None:
+                should_rerank = (
+                    self.config.rerank.enabled
+                    if (self.config and getattr(self.config, "rerank", None))
+                    else True
+                )
+            else:
+                should_rerank = False
+
+        if should_rerank and self.reranker is not None and getattr(self.reranker, "model", None) is not None:
+            # Retrieve candidate pool of size candidate_top_k
+            candidate_k = 20
+            if self.config and getattr(self.config, "rerank", None):
+                candidate_k = max(n_results, self.config.rerank.candidate_top_k)
+            else:
+                candidate_k = max(n_results, 20)
+
+            candidate_pool = self.hybrid_retriever.retrieve_with_metadata(
+                query=query,
+                n_results=candidate_k,
+                mode="hybrid",
+                fusion_method=fusion_method,
+            )
+            for c in candidate_pool:
+                if "id" not in c:
+                    c["id"] = c.get("chunk_id", "")
+                if "distance" not in c:
+                    c["distance"] = c.get("distance", 0.0)
+
+            reranked = self.reranker.rerank(
+                query=query,
+                candidates=candidate_pool,
+                top_k=n_results,
+            )
+            logger.info(f"Retrieved and reranked {len(reranked)} documents (hybrid+rerank)")
+            return reranked
+
+        # Hybrid retrieval without reranking
         candidates = self.hybrid_retriever.retrieve_with_metadata(
             query=query,
             n_results=n_results,
@@ -327,6 +423,8 @@ class RAGPipeline:
         for c in candidates:
             if "id" not in c:
                 c["id"] = c.get("chunk_id", "")
+            if "distance" not in c:
+                c["distance"] = c.get("distance", 0.0)
 
         logger.info(f"Retrieved {len(candidates)} documents with metadata (hybrid)")
         return candidates
@@ -387,8 +485,10 @@ Answer:"""
         max_tokens: int = 2048,
         mode: Optional[str] = None,
         fusion_method: Optional[str] = None,
+        rerank: Optional[bool] = None,
+        verify: Optional[bool] = None,
     ) -> Dict[str, Any]:
-        """Execute complete RAG query: retrieve + generate.
+        """Execute complete RAG query: retrieve (+ optional rerank) + generate (+ optional verify).
 
         Args:
             query: Query text
@@ -397,29 +497,68 @@ Answer:"""
             max_tokens: Maximum tokens in response
             mode: Optional 'vector' or 'hybrid'
             fusion_method: Optional 'weighted' or 'rrf'
+            rerank: Optional boolean to toggle reranking
+            verify: Optional boolean to toggle evidence verification
 
         Returns:
-            Result dict with query, retrieved docs, metadata, response, and retrieval info
+            Result dict with query, retrieved docs, metadata, response, verification, and latency info
         """
         logger.info(f"Executing RAG query: {query}")
         active_mode = (mode or self.retrieval_mode).lower()
 
-        # Retrieve with metadata
+        t0_retrieval = time.perf_counter()
         retrieved_chunks = self.retrieve_with_metadata(
             query=query,
             n_results=n_retrieve,
             mode=active_mode,
             fusion_method=fusion_method,
+            rerank=rerank,
         )
+        retrieval_latency_ms = (time.perf_counter() - t0_retrieval) * 1000.0
         documents = [c["text"] for c in retrieved_chunks] if retrieved_chunks else []
 
-        # Generate
+        # Generate response
+        t0_gen = time.perf_counter()
         response = self.generate_response(
             query=query,
             retrieved_documents=documents,
             temperature=temperature,
             max_tokens=max_tokens,
         )
+        generation_latency_ms = (time.perf_counter() - t0_gen) * 1000.0
+
+        # Verification Stage (Step 5)
+        should_verify = verify
+        if should_verify is None:
+            if self.verifier is not None:
+                should_verify = (
+                    self.config.verification.enabled
+                    if (self.config and getattr(self.config, "verification", None))
+                    else True
+                )
+            else:
+                should_verify = False
+
+        verification_result = None
+        if should_verify and self.verifier is not None:
+            try:
+                verification_result = self.verifier.verify(
+                    query=query,
+                    answer=response,
+                    evidence=retrieved_chunks,
+                )
+            except Exception as e:
+                logger.warning(f"Verification execution failed: {e}")
+                verification_result = {
+                    "status": "insufficient_evidence",
+                    "supported_claims": [],
+                    "unsupported_claims": [response],
+                    "contradicted_claims": [],
+                    "claims": [{"claim": response, "status": "insufficient_evidence", "evidence_ids": []}],
+                    "evidence": [],
+                    "verification_latency_ms": 0.0,
+                    "error": str(e),
+                }
 
         result = {
             "query": query,
@@ -428,12 +567,36 @@ Answer:"""
             "response": response,
             "n_documents_retrieved": len(documents),
             "retrieval_mode": active_mode,
+            "retrieval_latency_ms": round(retrieval_latency_ms, 2),
+            "generation_latency_ms": round(generation_latency_ms, 2),
         }
         if active_mode == "hybrid" and self.hybrid_retriever:
-            result["fusion_method"] = fusion_method or getattr(self.hybrid_retriever, "fusion_method", "weighted")
+            result["fusion_method"] = fusion_method or getattr(
+                self.hybrid_retriever, "fusion_method", "weighted"
+            )
+            is_reranked = (
+                (rerank is not False)
+                and (self.reranker is not None)
+                and (getattr(self.reranker, "model", None) is not None)
+            )
+            result["reranking_enabled"] = is_reranked
+            if is_reranked:
+                result["reranker_model"] = self.reranker.model_name
+
+        if verification_result is not None:
+            result["verification"] = verification_result
+            result["verification_enabled"] = True
+            result["verification_latency_ms"] = verification_result.get("verification_latency_ms", 0.0)
+            total_lat = retrieval_latency_ms + generation_latency_ms + result["verification_latency_ms"]
+        else:
+            result["verification_enabled"] = False
+            total_lat = retrieval_latency_ms + generation_latency_ms
+
+        result["total_latency_ms"] = round(total_lat, 2)
 
         logger.info("RAG query completed successfully")
         return result
+
 
     def generate_quiz(
         self,
@@ -489,14 +652,12 @@ Respond with ONLY a valid JSON array, no other text, in exactly this format:
 
         questions = []
         for i, item in enumerate(parsed[:num_questions]):
-            questions.append(
-                {
-                    "id": f"q{i + 1}",
-                    "question": item.get("question", "").strip(),
-                    "expected_answer": item.get("expected_answer", "").strip(),
-                    "context": context,
-                }
-            )
+            questions.append({
+                "id": f"q{i + 1}",
+                "question": item.get("question", "").strip(),
+                "expected_answer": item.get("expected_answer", "").strip(),
+                "context": context,
+            })
 
         logger.info(f"Generated {len(questions)} quiz questions")
         return questions
@@ -588,5 +749,34 @@ Respond with ONLY valid JSON, no other text, in exactly this format:
                 "dense_weight": getattr(self.hybrid_retriever, "dense_weight", 0.5),
                 "bm25_weight": getattr(self.hybrid_retriever, "bm25_weight", 0.5),
             }
+
+        if self.reranker and getattr(self.reranker, "model", None) is not None:
+            candidate_k = (
+                getattr(self.config.rerank, "candidate_top_k", 20)
+                if (self.config and getattr(self.config, "rerank", None))
+                else 20
+            )
+            final_k = (
+                getattr(self.config.rerank, "final_top_k", 5)
+                if (self.config and getattr(self.config, "rerank", None))
+                else 5
+            )
+            status["reranker"] = {
+                "enabled": True,
+                "model": self.reranker.model_name,
+                "candidate_top_k": candidate_k,
+                "final_top_k": final_k,
+            }
+        else:
+            status["reranker"] = {"enabled": False}
+
+        if self.verifier is not None:
+            status["verification"] = {
+                "enabled": True,
+                "temperature": getattr(self.verifier, "temperature", 0.0),
+                "max_tokens": getattr(self.verifier, "max_tokens", 1024),
+            }
+        else:
+            status["verification"] = {"enabled": False}
 
         return status

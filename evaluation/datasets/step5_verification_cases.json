@@ -1,0 +1,82 @@
+[
+  {
+    "id": "v001",
+    "case": "Case A - Clearly Supported",
+    "query": "What is Nikhil Dhasmana's educational qualification and institution?",
+    "candidate_answer": "Nikhil Dhasmana is pursuing a B.Tech in Artificial Intelligence & Machine Learning (AIML) at Inderprastha Engineering College (IPEC), Ghaziabad, affiliated with AKTU, with expected graduation in 2027.",
+    "expected_status": "supported",
+    "notes": "Directly supported by Education chunk in resume."
+  },
+  {
+    "id": "v002",
+    "case": "Case A - Clearly Supported",
+    "query": "How does AI Delivery Freshkart handle real-time delivery tracking?",
+    "candidate_answer": "The platform utilizes Socket.IO and WebSockets for real-time bi-directional communication, providing live delivery-status updates and delivery-partner information to customers.",
+    "expected_status": "supported",
+    "notes": "Directly supported by Project Experience chunk."
+  },
+  {
+    "id": "v003",
+    "case": "Case B - Partially Supported",
+    "query": "What database and caching technologies were used in AI Delivery Freshkart?",
+    "candidate_answer": "The project uses query-optimized MongoDB schemas for order and cart handling, and integrates Redis in-memory caching to reduce database read latencies.",
+    "expected_status": "partially_supported",
+    "notes": "MongoDB is supported; Redis in-memory caching is unsupported/hallucinated."
+  },
+  {
+    "id": "v004",
+    "case": "Case B - Partially Supported",
+    "query": "Which certifications did Nikhil complete and what cloud certifications does he hold?",
+    "candidate_answer": "Nikhil completed CRUD Operations in MongoDB in October 2025 and Database Programming with SQL in November 2025, and holds an AWS Certified Solutions Architect Associate certificate.",
+    "expected_status": "partially_supported",
+    "notes": "MongoDB and Oracle SQL certifications are supported; AWS certification is unsupported."
+  },
+  {
+    "id": "v005",
+    "case": "Case C - Contradicted",
+    "query": "When did Nikhil graduate and from which university?",
+    "candidate_answer": "Nikhil graduated in 2022 with a Bachelor of Science from Delhi University.",
+    "expected_status": "contradicted",
+    "notes": "Directly contradicts document: IPEC Ghaziabad, AKTU, expected graduation 2027."
+  },
+  {
+    "id": "v006",
+    "case": "Case C - Contradicted",
+    "query": "How is authentication handled in AI Delivery Freshkart?",
+    "candidate_answer": "The platform relies on basic session cookies and OAuth2 without JWT tokens or role-based access control.",
+    "expected_status": "contradicted",
+    "notes": "Directly contradicts document: explicitly states secure JWT-based authentication and RBAC."
+  },
+  {
+    "id": "v007",
+    "case": "Case D - Insufficient Evidence",
+    "query": "What are the daily active users (DAU) and server infrastructure costs for AI Delivery Freshkart?",
+    "candidate_answer": "AI Delivery Freshkart supports 25,000 daily active users with an AWS infrastructure cost of $350 per month.",
+    "expected_status": "insufficient_evidence",
+    "notes": "The document contains zero evidence regarding DAU or infrastructure costs."
+  },
+  {
+    "id": "v008",
+    "case": "Case E - Multi-Document / Multi-Section",
+    "query": "Synthesize the developer's skills profile connecting Technical Skills with Project Experience.",
+    "candidate_answer": "The developer lists React, Next.js, Node.js, Express.js, and MongoDB under Technical Skills, and demonstrates their applied usage in AI Delivery Freshkart for RESTful APIs, query optimization, and responsive Tailwind CSS UI.",
+    "expected_status": "supported",
+    "notes": "Synthesizes evidence across Skills, Projects, and Tools sections."
+  },
+  {
+    "id": "v009",
+    "case": "Case F - Numerical Metrics",
+    "query": "What is the contact phone number and expected graduation year listed in the resume?",
+    "candidate_answer": "The document lists contact phone number +91 9654861040 and expected graduation year 2027.",
+    "expected_status": "supported",
+    "notes": "Exact numerical and alphanumeric phone/year values."
+  },
+  {
+    "id": "v010",
+    "case": "Case G - Unanswerable",
+    "query": "What automated computer vision models are used in Freshkart for grocery inspection?",
+    "candidate_answer": "The provided documents do not contain any information about computer vision models or automated grocery inspection in Freshkart.",
+    "expected_status": "supported",
+    "notes": "Truthful and grounded acknowledgment that information is missing."
+  }
+]

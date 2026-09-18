@@ -372,11 +372,28 @@ document.addEventListener('DOMContentLoaded', () => {
       answerEl.className = 'answer-body';
       answerEl.textContent = response.response;
 
-      // Badges
-      evidenceStatus.style.display = 'inline-block';
+      // Verification Status Badge
+      if (response.verification && response.verification.status) {
+        const vStatus = response.verification.status;
+        const statusConfig = {
+          supported: { text: '✓ Supported by Evidence', cls: 'status-supported' },
+          partially_supported: { text: '⚠ Partially Supported', cls: 'status-partially_supported' },
+          contradicted: { text: '✕ Contradicted by Evidence', cls: 'status-contradicted' },
+          insufficient_evidence: { text: '? Insufficient Evidence', cls: 'status-insufficient_evidence' },
+        };
+        const cfg = statusConfig[vStatus] || { text: `Status: ${vStatus}`, cls: 'status-supported' };
+        evidenceStatus.textContent = cfg.text;
+        evidenceStatus.className = `evidence-badge ${cfg.cls}`;
+        evidenceStatus.style.display = 'inline-block';
+      } else {
+        evidenceStatus.textContent = '✓ Answer Synthesized';
+        evidenceStatus.className = 'evidence-badge status-supported';
+        evidenceStatus.style.display = 'inline-block';
+      }
       latencyBadge.textContent = `⚡ ${latencySec}s`;
       latencyBadge.style.display = 'inline-block';
       copyBtn.style.display = 'inline-block';
+
 
       if (evalLatency) {
         evalLatency.textContent = `${latencyMs} ms`;

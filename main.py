@@ -107,6 +107,8 @@ def cmd_query(args):
     pipeline, config = setup_pipeline()
 
     try:
+        rerank_flag = False if getattr(args, "no_rerank", False) else None
+        verify_flag = False if getattr(args, "no_verify", False) else None
         result = pipeline.rag_query(
             query=args.query,
             n_retrieve=args.top_k,
@@ -114,6 +116,8 @@ def cmd_query(args):
             max_tokens=args.max_tokens,
             mode=getattr(args, "mode", None),
             fusion_method=getattr(args, "fusion", None),
+            rerank=rerank_flag,
+            verify=verify_flag,
         )
 
         print(f"\n{'='*60}")
@@ -121,6 +125,18 @@ def cmd_query(args):
         print(f"Retrieval Mode: {result.get('retrieval_mode', 'default')}")
         if "fusion_method" in result:
             print(f"Fusion Method: {result['fusion_method']}")
+        if result.get("reranking_enabled"):
+            print(f"Neural Reranker: {result.get('reranker_model', 'Enabled')}")
+        elif getattr(args, "no_rerank", False):
+            print("Neural Reranker: Disabled (--no-rerank)")
+        if "retrieval_latency_ms" in result:
+            print(f"Retrieval Latency: {result['retrieval_latency_ms']} ms")
+        if "generation_latency_ms" in result:
+            print(f"Generation Latency: {result['generation_latency_ms']} ms")
+        if "verification_latency_ms" in result:
+            print(f"Verification Latency: {result['verification_latency_ms']} ms")
+        if "total_latency_ms" in result:
+            print(f"Total Pipeline Latency: {result['total_latency_ms']} ms")
         print(f"{'='*60}")
         print(f"\nRetrieved {result['n_documents_retrieved']} documents:\n")
 
@@ -129,8 +145,20 @@ def cmd_query(args):
             for i, chunk in enumerate(chunks, 1):
                 source_info = chunk.get("retrieval_source", "vector")
                 score_val = chunk.get("hybrid_score", chunk.get("dense_score", 0.0))
+                rerank_score = chunk.get("reranker_score")
                 page_info = chunk.get("metadata", {}).get("page_number", "?")
-                print(f"[Document {i}] (Source: {source_info}, Score: {score_val:.4f}, Page: {page_info})")
+                sec_info = chunk.get("metadata", {}).get("section", "")
+                
+                score_str = f"Score: {score_val:.4f}"
+                if rerank_score is not None:
+                    score_str += f" | Rerank Score: {rerank_score:.4f}"
+
+                header = f"[Document {i}] (Source: {source_info}, {score_str}, Page: {page_info}"
+                if sec_info:
+                    header += f", Section: {sec_info}"
+                header += ")"
+                print(header)
+
                 doc_text = chunk.get("text", "")
                 print(doc_text[:200] + "..." if len(doc_text) > 200 else doc_text)
                 print()
@@ -144,6 +172,31 @@ def cmd_query(args):
         print("Response:")
         print(f"{'='*60}")
         print(result["response"])
+
+        if result.get("verification_enabled") and "verification" in result:
+            v = result["verification"]
+            status_label = v.get("status", "unknown").upper()
+            status_icons = {
+                "SUPPORTED": "[✓ SUPPORTED]",
+                "PARTIALLY_SUPPORTED": "[⚠ PARTIALLY SUPPORTED]",
+                "CONTRADICTED": "[✕ CONTRADICTED]",
+                "INSUFFICIENT_EVIDENCE": "[? INSUFFICIENT EVIDENCE]",
+            }
+            icon = status_icons.get(status_label, f"[{status_label}]")
+            print(f"\n{'='*60}")
+            print(f"Evidence Verification: {icon}")
+            print(f"Verification Latency: {v.get('verification_latency_ms', 0)} ms")
+            print(f"{'='*60}")
+            if v.get("claims"):
+                print("Claim-Level Assessment:")
+                for c in v["claims"]:
+                    c_status = c.get("status", "").upper()
+                    c_icon = "✓" if c_status == "SUPPORTED" else ("✕" if c_status == "CONTRADICTED" else "?")
+                    ev_ids = f" (Evidence: {', '.join(c.get('evidence_ids', []))})" if c.get("evidence_ids") else ""
+                    print(f"  {c_icon} [{c_status}] {c.get('claim')}{ev_ids}")
+        elif getattr(args, "no_verify", False):
+            print("\nEvidence Verification: Disabled (--no-verify)")
+
 
     except Exception as e:
         logger.error(f"Error during query: {str(e)}", exc_info=True)
@@ -291,7 +344,18 @@ Examples:
         default=None,
         help="Hybrid fusion method: weighted or rrf (default: from config)",
     )
+    query_parser.add_argument(
+        "--no-rerank",
+        action="store_true",
+        help="Disable neural cross-encoder reranking (use raw hybrid/vector results)",
+    )
+    query_parser.add_argument(
+        "--no-verify",
+        action="store_true",
+        help="Disable post-generation evidence verification",
+    )
     query_parser.set_defaults(func=cmd_query)
+
 
     # Extract tables command
     tables_parser = subparsers.add_parser(

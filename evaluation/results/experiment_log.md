@@ -124,6 +124,92 @@ This document tracks the iterative development and experimental evaluation of th
 
 ---
 
+## Experiment 4: Neural Cross-Encoder Reranking (Two-Stage Retrieval)
+
+- **Date:** September 2026
+- **System Version:** Step 4 (Hybrid Candidate Retrieval + Cross-Encoder Reranking)
+- **Document Evaluated:** `Nikhil_Dhasmana_Resume_2.pdf` (1 Page, 6 Chunks, Document ID: `doc_dda75b4545a4`)
+- **Evaluation Dataset:** `evaluation/datasets/baseline_questions.json` (12 questions across 10 categories)
+
+### Configuration
+- **Two-Stage Architecture:**
+  1. **Candidate Generation Stage (Hybrid Retrieval):** Dual-channel Dense (`all-MiniLM-L6-v2`) + Sparse (`LuceneBM25Okapi`) with Reciprocal Rank Fusion ($k=60$) retrieving top candidate pool ($K_{\text{pool}}=20$).
+  2. **Neural Reranking Stage:** Pretrained Cross-Encoder (`cross-encoder/ms-marco-MiniLM-L-6-v2`, 6 transformer layers, 384 hidden dimensions, ~80 MB) performing full all-to-all cross-attention across query-passage pairs $(q, d_i)$.
+- **Candidate Pool Size ($K_{\text{pool}}$):** 20
+- **Final Top-K ($K_{\text{final}}$):** 5
+- **Batch Size:** 16 (local CPU inference)
+- **Score Assignment:** `reranker_score` (raw relevance logit) and `rerank_rank` (1-based position post-rerank).
+- **Metadata & Retrieval Score Preservation:** 100% preservation of all Step 2 metadata (`document_id`, `source_file`, `page_number`, `section`, `chunk_id`, `chunk_index`, `chunk_size`, `document_type`) and Step 3 retrieval scores (`dense_score`, `bm25_score`, `hybrid_score`, `retrieval_source`).
+- **Backward Compatibility:** Toggleable via `RERANKING_ENABLED=false` or `--no-rerank`; single-channel vector-only mode (`mode="vector"`) remains 100% operational.
+
+### Quantitative Benchmark Results (12 Questions Tested)
+- **Mean Precision@5:**
+  - Vector-Only (Baseline): 0.7000
+  - Hybrid RRF (Step 3): 0.7000
+  - **Hybrid + Cross-Encoder (Step 4): 0.7000**
+- **Mean Recall@5:**
+  - Vector-Only: 1.0000
+  - Hybrid RRF: 0.9167
+  - **Hybrid + Cross-Encoder: 1.0000 (100% Recall recovered, +9.1% over Step 3 RRF)**
+- **Mean Reciprocal Rank (MRR):**
+  - Vector-Only: 0.8750
+  - Hybrid RRF: 0.8750
+  - **Hybrid + Cross-Encoder: 0.8750**
+- **Mean nDCG@5:**
+  - Vector-Only: 0.8829
+  - Hybrid RRF: 0.9289
+  - **Hybrid + Cross-Encoder: 0.8818**
+- **Average Retrieval & Rerank Latency:**
+  - Vector-Only: 53.78 ms
+  - Hybrid RRF: 42.49 ms
+  - **Hybrid + Cross-Encoder Total: 448.40 ms** (Candidate Retrieval: 40.83 ms, Neural Reranking: 407.56 ms)
+- **Test Suite Pass Rate:** 100% (78 / 78 tests passing)
+
+### Qualitative Observations
+1. **Recall Recovery via Two-Stage Funnel:** Step 3 RRF suffered a slight recall dip (0.9167) when ranking reciprocal decay dropped marginal answer chunks past rank 5. Step 4's candidate pool expansion ($K_{\text{pool}}=20$) allowed the Cross-Encoder to evaluate a broader candidate set and elevate relevant chunks back into the top-5 window, recovering full **1.0000 Recall**.
+2. **Logit Calibration & Discriminative Power:** The Cross-Encoder produces unconstrained logit scores that clearly delineate high-relevance chunks (scores $+2.5$ to $+6.2$) from peripheral or irrelevant chunks (negative scores down to $-9.8$).
+3. **CPU Efficiency:** At ~407 ms reranking latency on consumer CPU for 6-20 passages, the two-stage pipeline easily fits within interactive search bounds (<500 ms) while completely eliminating external API calls.
+
+---
+
+## Experiment 5: Evidence Verification & Hallucination Detection (Post-Generation Integrity)
+
+- **Date:** September 2026
+- **System Version:** Step 5 (Two-Stage Retrieval + LLM Generation + Evidence Verification)
+- **Document Evaluated:** `Nikhil_Dhasmana_Resume_2.pdf` (1 Page, 6 Chunks, Document ID: `doc_dda75b4545a4`)
+- **Evaluation Dataset:** `evaluation/datasets/step5_verification_cases.json` (10 test cases across 7 categories)
+
+### Configuration
+- **Three-Stage Pipeline Architecture:**
+  1. **Candidate Retrieval Stage:** Dual-channel Hybrid Retrieval ($K_{\text{pool}}=20$) with Reciprocal Rank Fusion ($k=60$) followed by Cross-Encoder Reranking (`ms-marco-MiniLM-L-6-v2`) yielding top $K_{\text{final}}=5$ chunks with full Step 2 provenance.
+  2. **Answer Generation Stage:** Grounded answer synthesis via `LLMClient` (`groq/compound-mini`).
+  3. **Evidence Verification Stage:** Modular `EvidenceVerifier` decomposing generated responses into atomic claims, assessing claim entailment against XML-encapsulated evidence chunks, and computing deterministic verification status (`supported`, `partially_supported`, `contradicted`, `insufficient_evidence`).
+- **Prompt Security:** Rigid 'Documents as Data' XML isolation preventing prompt injection or instruction overriding from document text.
+- **Verification Parameters:** `temperature=0.0` (deterministic), `max_tokens=1024`.
+- **Backward Compatibility:** Toggleable via `EVIDENCE_VERIFICATION_ENABLED=false` or `--no-verify` / `verify=False`.
+
+### Quantitative Benchmark Results (10 Evaluation Cases)
+- **Classification Accuracy:** **90.0% (9 / 10 cases matched ground-truth label)**
+- **Verification Status Breakdown:**
+  - `supported`: 5 cases (100% verified)
+  - `partially_supported`: 2 cases (100% caught hallucinated tool/platform claims)
+  - `contradicted`: 1 case (detected direct factual conflict)
+  - `insufficient_evidence`: 2 cases (accurately flagged out-of-corpus details)
+- **Latency Profile (Mean across 10 queries):**
+  - Candidate Retrieval (Hybrid + Rerank): 500.71 ms
+  - Answer Generation (LLM): 2,252.62 ms
+  - Evidence Verification (LLM): 8,310.19 ms
+  - Step 4 Total Latency: 2,753.33 ms
+  - Step 5 Total Pipeline Latency: 11,063.51 ms
+- **Test Suite Pass Rate:** 100% (92 / 92 unit and integration tests passing)
+
+### Qualitative Observations
+1. **Partial Support Precision:** When answers mixed factual truths (e.g. MongoDB, Next.js) with fabricated additions (e.g. Redis caching, AWS certifications), the verifier isolated the ungrounded claims and properly assigned `partially_supported` instead of accepting the answer blindly.
+2. **Contradiction Catching:** Conflicting claims regarding authentication (session cookies vs JWT/RBAC) were successfully tagged as `contradicted`, triggering visual warning indicators on the interface.
+3. **Research-Honest Framing:** Output strictly avoids absolute claims of "100% hallucination-free", framing answers as verifiable statements grounded in retrieved evidence.
+
+---
+
 ## Planned Experiments (Future Steps)
 
 | Step | Experiment Name | Focus Area | Status |
@@ -131,10 +217,12 @@ This document tracks the iterative development and experimental evaluation of th
 | **Step 1** | **Baseline RAG** | Baseline stabilization & evaluation | **COMPLETED** |
 | **Step 2** | **Structure-Aware Document Processing** | Section hierarchy & page metadata | **COMPLETED** |
 | **Step 3** | **Hybrid Retrieval** | BM25 sparse + dense vector fusion | **COMPLETED** |
-| **Step 4** | Neural Reranking | Cross-Encoder top-K reranking | *Next Up* |
-| **Step 5** | Evidence Verification | NLI / Fact-checking verification | *Planned* |
-| **Step 6** | Advanced Citations | Chunk & page-level citation anchors | *Planned* |
+| **Step 4** | **Neural Reranking** | Cross-Encoder top-K reranking | **COMPLETED** |
+| **Step 5** | **Evidence Verification** | Claim-level entailment & hallucination detection | **COMPLETED** |
+| **Step 6** | Advanced Citations | Chunk & page-level citation anchors | *Next Up* |
 | **Step 7** | Multi-Document Comparison | Cross-document synthesis matrix | *Planned* |
 | **Step 8** | Adaptive Learning & Quiz | Confidence scoring & quiz mastery | *Planned* |
 | **Step 9** | Evaluation Dashboard | Real-time Ragas / RAG Triad suite | *Planned* |
 | **Step 10**| Final Optimization & Packaging | Performance profiling & paper write-up | *Planned* |
+
+

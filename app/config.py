@@ -67,6 +67,27 @@ class HybridConfig:
 
 
 @dataclass
+class RerankConfig:
+    """Neural Cross-Encoder reranking configuration."""
+
+    enabled: bool = True
+    model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    candidate_top_k: int = 20
+    final_top_k: int = 5
+    batch_size: int = 32
+
+
+@dataclass
+class VerificationConfig:
+    """Evidence verification and hallucination detection configuration."""
+
+    enabled: bool = True
+    temperature: float = 0.0
+    max_tokens: int = 1024
+    model: Optional[str] = None
+
+
+@dataclass
 class AppConfig:
     """Main application configuration."""
 
@@ -75,6 +96,8 @@ class AppConfig:
     chroma: ChromaConfig
     pdf: PDFConfig
     hybrid: Optional[HybridConfig] = None
+    rerank: Optional[RerankConfig] = None
+    verification: Optional[VerificationConfig] = None
     input_dir: Path = Path("./data/input")
     output_dir: Path = Path("./data/output")
     log_level: str = "INFO"
@@ -160,6 +183,27 @@ def load_config() -> AppConfig:
         bm25_persist_dir=bm25_persist_dir,
     )
 
+    rerank_enabled_str = os.getenv("RERANKING_ENABLED", "true").lower()
+    rerank_enabled = rerank_enabled_str in ("true", "1", "yes")
+
+    rerank_config = RerankConfig(
+        enabled=rerank_enabled,
+        model_name=os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
+        candidate_top_k=int(os.getenv("RERANKER_CANDIDATE_TOP_K", "20")),
+        final_top_k=int(os.getenv("RERANKER_FINAL_TOP_K", "5")),
+        batch_size=int(os.getenv("RERANKER_BATCH_SIZE", "32")),
+    )
+
+    verification_enabled_str = os.getenv("EVIDENCE_VERIFICATION_ENABLED", "true").lower()
+    verification_enabled = verification_enabled_str in ("true", "1", "yes")
+
+    verification_config = VerificationConfig(
+        enabled=verification_enabled,
+        temperature=float(os.getenv("VERIFICATION_TEMPERATURE", "0.0")),
+        max_tokens=int(os.getenv("VERIFICATION_MAX_TOKENS", "1024")),
+        model=os.getenv("VERIFICATION_MODEL") or None,
+    )
+
     # Build configuration
     config = AppConfig(
         llm=LLMConfig(
@@ -190,6 +234,8 @@ def load_config() -> AppConfig:
             ),
         ),
         hybrid=hybrid_config,
+        rerank=rerank_config,
+        verification=verification_config,
         input_dir=input_dir,
         output_dir=output_dir,
         log_level=os.getenv("LOG_LEVEL", "INFO"),
@@ -252,5 +298,20 @@ def validate_config(config: AppConfig) -> bool:
         if config.hybrid.rrf_k <= 0:
             raise ValueError("Hybrid rrf_k must be positive")
 
+    if config.rerank:
+        if config.rerank.candidate_top_k <= 0:
+            raise ValueError("Reranker candidate_top_k must be positive")
+        if config.rerank.final_top_k <= 0:
+            raise ValueError("Reranker final_top_k must be positive")
+        if config.rerank.batch_size <= 0:
+            raise ValueError("Reranker batch_size must be positive")
+
+    if config.verification:
+        if config.verification.temperature < 0 or config.verification.temperature > 2:
+            raise ValueError("Verification temperature must be between 0 and 2")
+        if config.verification.max_tokens <= 0:
+            raise ValueError("Verification max_tokens must be positive")
+
     logger.info("Configuration validation passed")
     return True
+

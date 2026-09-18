@@ -1257,6 +1257,25 @@ button {
   border: 1px solid var(--emerald-border);
 }
 
+.status-partially_supported, .status-partial {
+  background: var(--amber-bg);
+  color: #fbbf24;
+  border: 1px solid var(--amber-border);
+}
+
+.status-contradicted {
+  background: var(--rose-bg);
+  color: #f87171;
+  border: 1px solid var(--rose-border);
+}
+
+.status-insufficient_evidence, .status-insufficient {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+
 .latency-badge {
   font-size: 11px;
   font-family: var(--font-mono);

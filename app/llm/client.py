@@ -73,17 +73,30 @@ class GroqClient(LLMClient):
         Returns:
             Generated text
         """
-        try:
-            response = self.client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model=self.model,
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            logger.error(f"Error generating text with Groq: {str(e)}")
-            raise
+        import time
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model=self.model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                err_str = str(e).lower()
+                if ("rate_limit" in err_str or "429" in err_str) and attempt < max_retries - 1:
+                    wait_sec = 3.5 * (attempt + 1)
+                    logger.warning(
+                        f"Rate limit encountered on Groq; pausing {wait_sec:.1f}s before retry "
+                        f"(attempt {attempt + 1}/{max_retries})..."
+                    )
+                    time.sleep(wait_sec)
+                    continue
+                logger.error(f"Error generating text with Groq: {str(e)}")
+                raise
+
 
     def get_model_info(self) -> dict:
         """Get Groq model information."""
