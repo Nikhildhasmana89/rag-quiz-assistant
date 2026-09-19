@@ -11,6 +11,12 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Force UTF-8 output encoding for Windows terminals
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 from app.config import load_config, validate_config
 from app.utils import setup_logging, get_logger
 from app.pdf.text_extractor import PDFTextExtractor
@@ -109,6 +115,7 @@ def cmd_query(args):
     try:
         rerank_flag = False if getattr(args, "no_rerank", False) else None
         verify_flag = False if getattr(args, "no_verify", False) else None
+        cite_flag = False if getattr(args, "no_cite", False) else None
         result = pipeline.rag_query(
             query=args.query,
             n_retrieve=args.top_k,
@@ -118,6 +125,7 @@ def cmd_query(args):
             fusion_method=getattr(args, "fusion", None),
             rerank=rerank_flag,
             verify=verify_flag,
+            cite=cite_flag,
         )
 
         print(f"\n{'='*60}")
@@ -135,6 +143,8 @@ def cmd_query(args):
             print(f"Generation Latency: {result['generation_latency_ms']} ms")
         if "verification_latency_ms" in result:
             print(f"Verification Latency: {result['verification_latency_ms']} ms")
+        if "citation_latency_ms" in result:
+            print(f"Citation Latency: {result['citation_latency_ms']} ms")
         if "total_latency_ms" in result:
             print(f"Total Pipeline Latency: {result['total_latency_ms']} ms")
         print(f"{'='*60}")
@@ -177,10 +187,10 @@ def cmd_query(args):
             v = result["verification"]
             status_label = v.get("status", "unknown").upper()
             status_icons = {
-                "SUPPORTED": "[✓ SUPPORTED]",
-                "PARTIALLY_SUPPORTED": "[⚠ PARTIALLY SUPPORTED]",
-                "CONTRADICTED": "[✕ CONTRADICTED]",
-                "INSUFFICIENT_EVIDENCE": "[? INSUFFICIENT EVIDENCE]",
+                "SUPPORTED": "[SUPPORTED]",
+                "PARTIALLY_SUPPORTED": "[PARTIALLY SUPPORTED]",
+                "CONTRADICTED": "[CONTRADICTED]",
+                "INSUFFICIENT_EVIDENCE": "[INSUFFICIENT EVIDENCE]",
             }
             icon = status_icons.get(status_label, f"[{status_label}]")
             print(f"\n{'='*60}")
@@ -191,11 +201,52 @@ def cmd_query(args):
                 print("Claim-Level Assessment:")
                 for c in v["claims"]:
                     c_status = c.get("status", "").upper()
-                    c_icon = "✓" if c_status == "SUPPORTED" else ("✕" if c_status == "CONTRADICTED" else "?")
+                    c_icon = "(+)" if c_status == "SUPPORTED" else ("(-)" if c_status == "CONTRADICTED" else "(?)")
                     ev_ids = f" (Evidence: {', '.join(c.get('evidence_ids', []))})" if c.get("evidence_ids") else ""
                     print(f"  {c_icon} [{c_status}] {c.get('claim')}{ev_ids}")
         elif getattr(args, "no_verify", False):
             print("\nEvidence Verification: Disabled (--no-verify)")
+
+        # Grounded Citations & Provenance Display (Step 6)
+        if result.get("citations_enabled"):
+            citations = result.get("citations", [])
+            print(f"\n{'='*60}")
+            print(f"Grounded Citations & Provenance ({len(citations)} citations):")
+            print(f"{'='*60}")
+            if citations:
+                for cit in citations:
+                    c_idx = cit.get("citation_index", 1)
+                    c_claim = cit.get("claim", "")
+                    c_status = cit.get("claim_status", "supported").upper()
+                    doc = cit.get("document_name", "Unknown Document")
+                    page = cit.get("page_number", 1)
+                    sec = cit.get("section") or "General"
+                    cid = cit.get("chunk_id", "chunk_unknown")
+                    rerank_sc = cit.get("reranker_score")
+                    score_info = (
+                        f"Rerank Score: {rerank_sc:.4f}"
+                        if rerank_sc is not None
+                        else f"Score: {cit.get('confidence_score', 1.0):.4f}"
+                    )
+                    ev_snippet = cit.get("evidence_text", "")
+
+                    status_sym = "(+)" if c_status == "SUPPORTED" else ("(~)" if c_status == "PARTIALLY_SUPPORTED" else "(-)")
+                    print(f"[{c_idx}] {status_sym} [{c_status}] Claim: \"{c_claim}\"")
+                    print(f"    Source: [Document: {doc} | Page: {page} | Section: {sec} | Chunk: {cid} | {score_info}]")
+                    if ev_snippet:
+                        print(f"    Evidence: \"{ev_snippet}\"")
+                    print()
+            else:
+                print("No citations generated (No grounded evidence matched answer claims).")
+
+            unsupported = result.get("unsupported_claims", [])
+            if unsupported:
+                print(f"Unsupported Claims ({len(unsupported)} ungrounded - 0 fake citations):")
+                for un_c in unsupported:
+                    print(f"  (?) [INSUFFICIENT EVIDENCE] \"{un_c}\"")
+                print()
+        elif getattr(args, "no_cite", False):
+            print("\nGrounded Citations: Disabled (--no-cite)")
 
 
     except Exception as e:
@@ -353,6 +404,11 @@ Examples:
         "--no-verify",
         action="store_true",
         help="Disable post-generation evidence verification",
+    )
+    query_parser.add_argument(
+        "--no-cite",
+        action="store_true",
+        help="Disable grounded citation generation and provenance tracking",
     )
     query_parser.set_defaults(func=cmd_query)
 

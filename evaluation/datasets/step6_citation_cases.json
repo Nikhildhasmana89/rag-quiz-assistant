@@ -1,0 +1,182 @@
+[
+  {
+    "case_id": "case_01",
+    "category": "supported",
+    "query": "What is Nikhil Dhasmana's educational background and GPA?",
+    "answer": "Nikhil Dhasmana earned a Bachelor of Technology in Computer Science and Engineering with an 8.9 CGPA.",
+    "claims": [
+      {
+        "claim": "Nikhil Dhasmana earned a Bachelor of Technology in Computer Science and Engineering.",
+        "status": "supported",
+        "evidence_ids": ["chunk_dda75b4545a4_1"]
+      },
+      {
+        "claim": "He achieved a cumulative CGPA of 8.9 out of 10.",
+        "status": "supported",
+        "evidence_ids": ["chunk_dda75b4545a4_1"]
+      }
+    ],
+    "expected_citations_count": 2,
+    "expected_status": "supported"
+  },
+  {
+    "case_id": "case_02",
+    "category": "supported",
+    "query": "Where did Nikhil work and what was his impact on retrieval latency?",
+    "answer": "Nikhil worked at Stealth AI Startup as an AI Engineer and reduced retrieval latency by 45%.",
+    "claims": [
+      {
+        "claim": "Nikhil worked at Stealth AI Startup as an AI Engineer.",
+        "status": "supported",
+        "evidence_ids": ["chunk_dda75b4545a4_2"]
+      },
+      {
+        "claim": "He reduced retrieval latency by 45% through RAG optimization.",
+        "status": "supported",
+        "evidence_ids": ["chunk_dda75b4545a4_2"]
+      }
+    ],
+    "expected_citations_count": 2,
+    "expected_status": "supported"
+  },
+  {
+    "case_id": "case_03",
+    "category": "partially_supported",
+    "query": "What machine learning models and cloud certifications did Nikhil obtain?",
+    "answer": "Nikhil has experience with BERT and PyTorch, and he is a certified AWS Solutions Architect.",
+    "claims": [
+      {
+        "claim": "Nikhil has practical experience with BERT and PyTorch architectures.",
+        "status": "supported",
+        "evidence_ids": ["chunk_dda75b4545a4_3"]
+      },
+      {
+        "claim": "He holds an active AWS Certified Solutions Architect Professional certificate.",
+        "status": "partially_supported",
+        "evidence_ids": ["chunk_dda75b4545a4_3"]
+      }
+    ],
+    "expected_citations_count": 2,
+    "expected_status": "partially_supported"
+  },
+  {
+    "case_id": "case_04",
+    "category": "contradicted",
+    "query": "Did Nikhil graduate with a medical degree from Harvard?",
+    "answer": "Nikhil graduated from Harvard Medical School with an MD degree in 2020.",
+    "claims": [
+      {
+        "claim": "Nikhil graduated with an MD degree from Harvard Medical School in 2020.",
+        "status": "contradicted",
+        "evidence_ids": ["chunk_dda75b4545a4_1"]
+      }
+    ],
+    "expected_citations_count": 1,
+    "expected_status": "contradicted"
+  },
+  {
+    "case_id": "case_05",
+    "category": "insufficient_evidence",
+    "query": "How many patents on quantum teleportation does Nikhil own?",
+    "answer": "Nikhil owns four international patents on superconducting quantum teleportation circuits.",
+    "claims": [
+      {
+        "claim": "Nikhil owns four international patents on superconducting quantum teleportation circuits.",
+        "status": "insufficient_evidence",
+        "evidence_ids": []
+      }
+    ],
+    "expected_citations_count": 0,
+    "expected_status": "insufficient_evidence"
+  },
+  {
+    "case_id": "case_06",
+    "category": "mixed",
+    "query": "What projects has Nikhil built and what awards did he win in Paris?",
+    "answer": "Nikhil built an Evidence-Based RAG Quiz Assistant using ChromaDB, and won the Paris AI Grand Prix in 2022.",
+    "claims": [
+      {
+        "claim": "Nikhil developed an Evidence-Based RAG Quiz Assistant utilizing ChromaDB vector search.",
+        "status": "supported",
+        "evidence_ids": ["chunk_dda75b4545a4_4"]
+      },
+      {
+        "claim": "He received the Paris AI Grand Prix award in 2022.",
+        "status": "insufficient_evidence",
+        "evidence_ids": []
+      }
+    ],
+    "expected_citations_count": 1,
+    "expected_status": "partially_supported"
+  },
+  {
+    "case_id": "case_07",
+    "category": "supported",
+    "query": "What programming languages and frameworks does Nikhil use?",
+    "answer": "Nikhil is proficient in Python, TypeScript, PyTorch, and FastAPI.",
+    "claims": [
+      {
+        "claim": "Nikhil is proficient in Python and TypeScript.",
+        "status": "supported",
+        "evidence_ids": ["chunk_dda75b4545a4_0"]
+      },
+      {
+        "claim": "He utilizes PyTorch and FastAPI for machine learning deployment.",
+        "status": "supported",
+        "evidence_ids": ["chunk_dda75b4545a4_0"]
+      }
+    ],
+    "expected_citations_count": 2,
+    "expected_status": "supported"
+  },
+  {
+    "case_id": "case_08",
+    "category": "insufficient_evidence",
+    "query": "What was Nikhil's mission duration aboard the International Space Station?",
+    "answer": "Nikhil completed a six-month mission as an flight engineer aboard the International Space Station.",
+    "claims": [
+      {
+        "claim": "Nikhil served as an ISS flight engineer for six months.",
+        "status": "insufficient_evidence",
+        "evidence_ids": []
+      }
+    ],
+    "expected_citations_count": 0,
+    "expected_status": "insufficient_evidence"
+  },
+  {
+    "case_id": "case_09",
+    "category": "contradicted",
+    "query": "Was Nikhil's undergraduate degree in Renaissance Literature?",
+    "answer": "Nikhil completed a Bachelor of Arts in Renaissance Literature with honors.",
+    "claims": [
+      {
+        "claim": "Nikhil completed a Bachelor of Arts in Renaissance Literature.",
+        "status": "contradicted",
+        "evidence_ids": ["chunk_dda75b4545a4_1"]
+      }
+    ],
+    "expected_citations_count": 1,
+    "expected_status": "contradicted"
+  },
+  {
+    "case_id": "case_10",
+    "category": "partially_supported",
+    "query": "What did Nikhil accomplish during his internship?",
+    "answer": "Nikhil developed automated CI/CD deployment pipelines and secured 5 enterprise customer contracts.",
+    "claims": [
+      {
+        "claim": "Nikhil developed automated CI/CD deployment pipelines during his internship.",
+        "status": "supported",
+        "evidence_ids": ["chunk_dda75b4545a4_2"]
+      },
+      {
+        "claim": "He personally closed 5 enterprise contracts valued at $1M.",
+        "status": "partially_supported",
+        "evidence_ids": ["chunk_dda75b4545a4_2"]
+      }
+    ],
+    "expected_citations_count": 2,
+    "expected_status": "partially_supported"
+  }
+]

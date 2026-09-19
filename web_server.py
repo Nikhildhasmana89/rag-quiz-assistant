@@ -85,6 +85,9 @@ def query():
         verify = payload.get("verify")
         if verify is None and "no_verify" in payload:
             verify = not payload.get("no_verify")
+        cite = payload.get("cite")
+        if cite is None and "no_cite" in payload:
+            cite = not payload.get("no_cite")
         result = pipeline.rag_query(
             query=question,
             n_retrieve=max(1, min(int(payload.get("top_k", 5)), 20)),
@@ -94,6 +97,7 @@ def query():
             fusion_method=fusion,
             rerank=rerank,
             verify=verify,
+            cite=cite,
         )
 
         return jsonify(result)

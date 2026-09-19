@@ -22,6 +22,7 @@ class RAGPipeline:
         hybrid_retriever=None,
         reranker=None,
         verifier=None,
+        citation_engine=None,
         config=None,
     ):
         """Initialize RAG pipeline.
@@ -34,6 +35,7 @@ class RAGPipeline:
             hybrid_retriever: Optional HybridRetriever instance
             reranker: Optional CrossEncoderReranker instance
             verifier: Optional EvidenceVerifier instance
+            citation_engine: Optional CitationEngine instance
             config: Optional AppConfig instance
         """
         self.pdf_extractor = pdf_extractor
@@ -135,6 +137,18 @@ class RAGPipeline:
         else:
             self.verifier = None
 
+        # Initialize or wire CitationEngine (Step 6)
+        if citation_engine is not None:
+            self.citation_engine = citation_engine
+        else:
+            try:
+                from app.citations import CitationEngine
+
+                self.citation_engine = CitationEngine(config=self.config)
+            except Exception as e:
+                logger.warning(f"Could not auto-initialize CitationEngine: {e}")
+                self.citation_engine = None
+
         if config and hasattr(config, "hybrid") and config.hybrid:
             self.retrieval_mode = config.hybrid.retrieval_mode
         else:
@@ -143,7 +157,8 @@ class RAGPipeline:
         logger.info(
             f"Initialized RAGPipeline (retrieval_mode={self.retrieval_mode}, "
             f"reranker={'enabled' if (self.reranker and getattr(self.reranker, 'model', None)) else 'disabled'}, "
-            f"verifier={'enabled' if self.verifier is not None else 'disabled'})"
+            f"verifier={'enabled' if self.verifier is not None else 'disabled'}, "
+            f"citations={'enabled' if self.citation_engine is not None else 'disabled'})"
         )
 
 
@@ -487,8 +502,9 @@ Answer:"""
         fusion_method: Optional[str] = None,
         rerank: Optional[bool] = None,
         verify: Optional[bool] = None,
+        cite: Optional[bool] = None,
     ) -> Dict[str, Any]:
-        """Execute complete RAG query: retrieve (+ optional rerank) + generate (+ optional verify).
+        """Execute complete RAG query: retrieve (+ optional rerank) + generate (+ optional verify) + citations.
 
         Args:
             query: Query text
@@ -499,9 +515,10 @@ Answer:"""
             fusion_method: Optional 'weighted' or 'rrf'
             rerank: Optional boolean to toggle reranking
             verify: Optional boolean to toggle evidence verification
+            cite: Optional boolean to toggle citation generation
 
         Returns:
-            Result dict with query, retrieved docs, metadata, response, verification, and latency info
+            Result dict with query, retrieved docs, metadata, response, verification, citations, and latency info
         """
         logger.info(f"Executing RAG query: {query}")
         active_mode = (mode or self.retrieval_mode).lower()
@@ -560,6 +577,41 @@ Answer:"""
                     "error": str(e),
                 }
 
+        # Grounded Citation Generation Stage (Step 6)
+        should_cite = cite
+        if should_cite is None:
+            should_cite = True if self.citation_engine is not None else False
+
+        citation_result = None
+        citation_latency_ms = 0.0
+        if should_cite and self.citation_engine is not None:
+            try:
+                if verification_result is not None and "claims" in verification_result and verification_result["claims"]:
+                    eval_claims = verification_result["claims"]
+                else:
+                    eval_claims = [{
+                        "claim": response,
+                        "status": "supported" if retrieved_chunks else "insufficient_evidence",
+                        "evidence_ids": [c.get("chunk_id") or c.get("id") for c in retrieved_chunks[:3]],
+                    }]
+
+                citation_result = self.citation_engine.generate_citations(
+                    claims=eval_claims,
+                    evidence_chunks=retrieved_chunks,
+                    answer_text=response,
+                )
+                citation_latency_ms = citation_result.get("citation_latency_ms", 0.0)
+            except Exception as e:
+                logger.warning(f"Citation generation failed: {e}")
+                citation_result = {
+                    "citations": [],
+                    "claims": [],
+                    "annotated_response": response,
+                    "unsupported_claims": [],
+                    "citation_latency_ms": 0.0,
+                    "error": str(e),
+                }
+
         result = {
             "query": query,
             "retrieved_documents": documents,
@@ -587,11 +639,33 @@ Answer:"""
             result["verification"] = verification_result
             result["verification_enabled"] = True
             result["verification_latency_ms"] = verification_result.get("verification_latency_ms", 0.0)
-            total_lat = retrieval_latency_ms + generation_latency_ms + result["verification_latency_ms"]
         else:
             result["verification_enabled"] = False
-            total_lat = retrieval_latency_ms + generation_latency_ms
+            result["verification_latency_ms"] = 0.0
 
+        if citation_result is not None:
+            result["citations"] = citation_result.get("citations", [])
+            result["claims"] = citation_result.get("claims", [])
+            result["annotated_response"] = citation_result.get("annotated_response", response)
+            result["citations_enabled"] = True
+            result["citation_latency_ms"] = citation_latency_ms
+            if "unsupported_claims" in citation_result:
+                result["unsupported_claims"] = citation_result["unsupported_claims"]
+            if "metrics" in citation_result:
+                result["citation_metrics"] = citation_result["metrics"]
+        else:
+            result["citations"] = []
+            result["claims"] = []
+            result["annotated_response"] = response
+            result["citations_enabled"] = False
+            result["citation_latency_ms"] = 0.0
+
+        total_lat = (
+            retrieval_latency_ms
+            + generation_latency_ms
+            + result["verification_latency_ms"]
+            + result["citation_latency_ms"]
+        )
         result["total_latency_ms"] = round(total_lat, 2)
 
         logger.info("RAG query completed successfully")

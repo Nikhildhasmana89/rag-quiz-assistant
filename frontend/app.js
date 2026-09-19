@@ -329,6 +329,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sourcesEl = $('sources');
     const evidenceSection = $('evidence-section');
     const evidenceStatus = $('evidence-status');
+    const citationsSection = $('citations-section');
+    const citationsList = $('citations-list');
+    const citationsCountBadge = $('citations-count-badge');
     const latencyBadge = $('latency-badge');
     const copyBtn = $('copy-answer-btn');
     const countBadge = $('evidence-count-badge');
@@ -347,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     answerEl.textContent = 'Searching vector index for relevant passages and synthesizing answer...';
     evidenceSection.style.display = 'none';
     evidenceStatus.style.display = 'none';
+    if (citationsSection) citationsSection.style.display = 'none';
     latencyBadge.style.display = 'none';
     copyBtn.style.display = 'none';
 
@@ -368,9 +372,18 @@ document.addEventListener('DOMContentLoaded', () => {
       state.lastLatencyMs = latencyMs;
       const latencySec = (latencyMs / 1000).toFixed(2);
 
-      // Render Answer
+      // Render Answer with inline citation markers
       answerEl.className = 'answer-body';
-      answerEl.textContent = response.response;
+      if (response.annotated_response) {
+        const safeText = response.annotated_response
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\[(\d+)\]/g, '<span class="citation-marker">[$1]</span>');
+        answerEl.innerHTML = safeText;
+      } else {
+        answerEl.textContent = response.response;
+      }
 
       // Verification Status Badge
       if (response.verification && response.verification.status) {
@@ -394,14 +407,94 @@ document.addEventListener('DOMContentLoaded', () => {
       latencyBadge.style.display = 'inline-block';
       copyBtn.style.display = 'inline-block';
 
-
       if (evalLatency) {
         evalLatency.textContent = `${latencyMs} ms`;
       }
 
-      // Render Retrieved Evidence Chunks
+      // Render Grounded Citations & Provenance (Step 6)
+      if (citationsSection && citationsList) {
+        citationsList.innerHTML = '';
+        const hasCitations = response.citations && response.citations.length > 0;
+        const hasUnsupported = response.unsupported_claims && response.unsupported_claims.length > 0;
+
+        if (hasCitations || hasUnsupported) {
+          citationsSection.style.display = 'block';
+          if (citationsCountBadge) {
+            citationsCountBadge.textContent = `${(response.citations || []).length} citation${(response.citations || []).length === 1 ? '' : 's'}`;
+          }
+
+          if (hasCitations) {
+            response.citations.forEach((cit) => {
+              const card = document.createElement('div');
+              const statusClass = cit.claim_status === 'supported' ? 'supported' : (cit.claim_status === 'partially_supported' ? 'partially-supported' : 'contradicted');
+              card.className = `citation-card ${statusClass}`;
+              const scoreText = cit.reranker_score !== null && cit.reranker_score !== undefined
+                ? `Rerank: ${Number(cit.reranker_score).toFixed(3)}`
+                : `Score: ${Number(cit.confidence_score || 1.0).toFixed(2)}`;
+              
+              const secPill = cit.section ? `<span class="citation-pill">Sec: ${cit.section}</span>` : '';
+              card.innerHTML = `
+                <div class="citation-top-row">
+                  <span class="citation-claim-title">[${cit.citation_index}] "${cit.claim}"</span>
+                  <span class="evidence-badge ${statusClass === 'supported' ? 'status-supported' : (statusClass === 'partially-supported' ? 'status-partially_supported' : 'status-contradicted')}">
+                    ${cit.claim_status.toUpperCase()}
+                  </span>
+                </div>
+                <div class="citation-meta-pills">
+                  <span class="citation-pill doc">📄 ${cit.document_name}</span>
+                  <span class="citation-pill">Page ${cit.page_number}</span>
+                  ${secPill}
+                  <span class="citation-pill">Chunk: ${cit.chunk_id}</span>
+                  <span class="citation-pill score">${scoreText}</span>
+                </div>
+                ${cit.evidence_text ? `<div class="citation-snippet">"${cit.evidence_text}"</div>` : ''}
+              `;
+              citationsList.appendChild(card);
+            });
+          }
+
+          if (hasUnsupported) {
+            const unBanner = document.createElement('div');
+            unBanner.className = 'unsupported-banner';
+            const unList = response.unsupported_claims.map((u) => `• "${u}" (Zero fake citations generated)`).join('<br>');
+            unBanner.innerHTML = `<strong>⚠️ Ungrounded Statements (${response.unsupported_claims.length}):</strong><br>${unList}`;
+            citationsList.appendChild(unBanner);
+          }
+        } else {
+          citationsSection.style.display = 'none';
+        }
+      }
+
+      // Render Retrieved Evidence Chunks with Provenance Metadata
       sourcesEl.innerHTML = '';
-      if (response.retrieved_documents && response.retrieved_documents.length) {
+      const rawChunks = response.retrieved_chunks || [];
+      if (rawChunks.length > 0) {
+        evidenceSection.style.display = 'block';
+        countBadge.textContent = `${rawChunks.length} chunks retrieved`;
+
+        rawChunks.forEach((chunk, idx) => {
+          const item = document.createElement('div');
+          item.className = 'source-item';
+          const meta = chunk.metadata || {};
+          const docName = meta.source_file || chunk.source_file || 'Document';
+          const pageNum = meta.page_number || chunk.page_number || 1;
+          const secName = meta.section || chunk.section || '';
+          const cid = chunk.chunk_id || chunk.id || `chunk_${idx + 1}`;
+          const rerankScore = chunk.reranker_score;
+          const scoreInfo = rerankScore !== undefined && rerankScore !== null
+            ? `Rerank: ${Number(rerankScore).toFixed(3)}`
+            : `Score: ${Number(chunk.hybrid_score || chunk.dense_score || 1.0).toFixed(2)}`;
+
+          item.innerHTML = `
+            <div class="source-meta">
+              <span class="source-tag">Chunk #${idx + 1} (${cid})</span>
+              <span class="source-length">📄 ${docName} · P.${pageNum}${secName ? ` · ${secName}` : ''} · ${scoreInfo}</span>
+            </div>
+            <div class="source-content">${chunk.text || ''}</div>
+          `;
+          sourcesEl.appendChild(item);
+        });
+      } else if (response.retrieved_documents && response.retrieved_documents.length) {
         evidenceSection.style.display = 'block';
         countBadge.textContent = `${response.retrieved_documents.length} chunks retrieved`;
 
